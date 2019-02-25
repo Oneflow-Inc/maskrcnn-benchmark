@@ -9,6 +9,8 @@ import torch.distributed as dist
 from maskrcnn_benchmark.utils.comm import get_world_size
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 
+import numpy as np
+import os
 
 def reduce_loss_dict(loss_dict):
     """
@@ -55,6 +57,38 @@ def do_train(
     end = time.time()
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
         data_time = time.time() - end
+        def save_tensor(path, name, tensor_or_tuple):
+            if type(tensor_or_tuple) is tuple:
+                for idx,i in enumerate(tensor_or_tuple):
+                    if i is not None:
+                        print(i.size())
+                        np.save(path+str(iteration-1)+"."+name+"_"+str(idx)+"."+str(i.size()), i.detach().cpu().numpy())
+            else:
+                np.save(path+str(iteration-1)+"."+name+"."+str(tensor_or_tuple.size()), tensor_or_tuple.detach().cpu().numpy())
+        def fw_callback(module, input, output):
+          save_tensor(".", "in", input)
+          save_tensor(".", "out", output)
+          return
+        def bw_callback(module, grad_input, grad_output):
+          save_tensor(".", "in_diff", grad_input)
+          save_tensor(".", "out_diff", grad_output)
+          return
+        def register_callback_rec(model, mask_rcnn_root_dir, names, prefix="dump"):
+            for (n, m) in model.named_children():
+                new_prefix = prefix + "/" + n
+                if new_prefix in names:
+                    print("registering callback for " + new_prefix)
+                    abs_path = os.path.abspath(os.join(mask_rcnn_root_dir, new_prefix))
+                    if not os.path.exists(abs_path):
+                        os.mkdir(abs_path)
+                    os.chdir(abs_path)
+                    m.register_forward_hook(fw_callback)
+                    m.register_backward_hook(bw_callback)
+                    os.chdir(mask_rcnn_root_dir)
+                register_callback_rec(m, mask_rcnn_root_dir, names, new_prefix)
+        if iteration is 0:
+            mask_rcnn_root_dir = os.getcwd()
+            register_callback_rec(model, mask_rcnn_root_dir, ["/roi_heads/mask/feature_extractor/pooler/poolers/0"])
         iteration = iteration + 1
         arguments["iteration"] = iteration
 
