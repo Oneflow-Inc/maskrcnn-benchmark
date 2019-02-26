@@ -1,3 +1,5 @@
+ # -*- coding: utf-8 -*
+
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import datetime
 import logging
@@ -79,8 +81,11 @@ def do_train(
                     # tuple of Tensors
                     elif (type(item) is torch.Tensor):
                         print 'tuple of Tensors'
-                        np.save(path + "/" + "iter-" + str(iteration-1) + "." + name + "_" + str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
+                        np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
+                    elif (type(item) is dict):
+                        print 'tuple of dicts'
                     else:
+                        print 'type' + str(type(item)) + 'does not support!'
                         assert False
             elif type(entity_to_save) is list:
                 for idx, item in enumerate(entity_to_save):
@@ -89,28 +94,35 @@ def do_train(
                         print 'list of Tensors'
             elif type(entity_to_save) is torch.Tensor:
                 print 'torch.Tensor!!!'
-                np.save(path + "/" + "iter-" + str(iteration-1) + "." + name + "." + str(entity_to_save.size()), entity_to_save.detach().cpu().numpy())
+                np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "." + str(entity_to_save.size()), entity_to_save.detach().cpu().numpy())
             else:
                 assert False
         def fw_callback(module, input, output):
-          path = 'dump' + module2name[module]
-          if not os.path.exists(path):
-              os.makedirs(path)
-          save_tensor(path, "in", input)
-          save_tensor(path, "out", output)
-          return
+            module_name = module2name[module]
+            print 'We are in ' + module_name + "'s fw_callback function."
+            path = 'dump' + module_name
+            if not os.path.exists(path):
+                os.makedirs(path)
+            if iteration - 1 == 0:
+                save_tensor(path, "in", input)
+                save_tensor(path, "out", output)
+            return
         def bw_callback(module, grad_input, grad_output):
-          path = 'dump' + module2name[module]
-          if not os.path.exists(path):
-              os.makedirs(path)
-          save_tensor(path, "in_diff", grad_input)
-          save_tensor(path, "out_diff", grad_output)
-          return
+            module_name = module2name[module]
+            print 'We are in ' + module_name + "'s fw_callback function."
+            path = 'dump' + module_name
+            if not os.path.exists(path):
+                os.makedirs(path)
+            if iteration - 1 == 0:
+                save_tensor(path, "in_diff", grad_input)
+                save_tensor(path, "out_diff", grad_output)
+            return
         def register_callback_rec_for_all_modules(module, prefix=""):
             for (n, m) in module.named_children():
                 new_prefix = prefix + "/" + n
                 module2name[m] = new_prefix
-                print("registering callback for " + new_prefix)
+                print new_prefix
+                # print("registering callback for " + new_prefix)
                 m.register_forward_hook(fw_callback)
                 m.register_backward_hook(bw_callback)
                 register_callback_rec_for_all_modules(m, new_prefix)
@@ -123,8 +135,10 @@ def do_train(
                     m.register_forward_hook(fw_callback)
                     m.register_backward_hook(bw_callback)
                 register_callback_rec_for_particular_modules(m, names, new_prefix)
-        if iteration is 0:
-            register_callback_rec_for_all_modules(model)
+        # save modules' in, out, in_diff, out_diff
+        # if iteration is 0:
+        #     register_callback_rec_for_particular_modules(model, ['/backbone', '/rpn', '/roi_heads'])
+
         iteration = iteration + 1
         arguments["iteration"] = iteration
 

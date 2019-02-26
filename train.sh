@@ -1,2 +1,3 @@
+rm -r ./dump
 python ./tools/train_net.py \
-       --config-file "./configs/customized_e2e_mask_rcnn_R_50_C4_1x.yaml"
+       --config-file "./configs/pytorch_mask_rcnn_benchmark_R_50_FPN_1x.yaml"
