@@ -6,5 +6,5 @@ rm log.txt
 #        --config-file "./configs/pytorch_mask_rcnn_benchmark_R_50_FPN_1x.yaml" \
 #        --skip-test
 python ./tools/train_net.py\
-       --config-file "./configs/pytorch_mask_rcnn_benchmark_R_50_FPN_1x.yaml" \
+       --config-file "./configs/customized_e2e_mask_rcnn_R_50_FPN_1x.yaml" \
        --skip-test
