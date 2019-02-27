@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*
+# -*- coding: utf-8 -*
 
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import datetime
@@ -65,38 +65,40 @@ def do_train(
         # 由于不同module的输入输出类型不同，save_tensor保存blob的策略一边验证一边修改
         # 等全网络验证完成之后会产生一个比较好的存储blob的目录结构
         def save_tensor(path, name, entity_to_save):
-            if type(entity_to_save) is tuple:
-                print 'tuple!!!'
-                for idx, item in enumerate(entity_to_save):
-                    # tuple of lists
-                    if (type(item) is list):
-                        print 'tuple of lists'
-                        for idx_2, elem in enumerate(item):
-                            # tuple of lists of Tensors
-                            if (type(item) is torch.Tensor):
-                                np.save(path + "/" + "iter-" + str(iteration-1) + name  + "_" + str(idx) + "_" + str(idx_2) + "." + str(item.size()), item.detach().cpu().numpy())
-                    # tuple of ImageList 
-                    elif (type(item) is maskrcnn_benchmark.structures.image_list.ImageList):
-                        print 'tuple of ImageList'
-                    # tuple of Tensors
-                    elif (type(item) is torch.Tensor):
-                        print 'tuple of Tensors'
-                        np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
-                    elif (type(item) is dict):
-                        print 'tuple of dicts'
-                    else:
-                        print 'type' + str(type(item)) + 'does not support!'
-                        assert False
-            elif type(entity_to_save) is list:
-                for idx, item in enumerate(entity_to_save):
-                    # list of Tensors
-                    if (type(iter) is torch.Tensor):
-                        print 'list of Tensors'
-            elif type(entity_to_save) is torch.Tensor:
-                print 'torch.Tensor!!!'
-                np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "." + str(entity_to_save.size()), entity_to_save.detach().cpu().numpy())
-            else:
-                assert False
+            if iteration - 1 == 0:
+                if type(entity_to_save) is tuple:
+                    print 'tuple!!!'
+                    for idx, item in enumerate(entity_to_save):
+                        # tuple of lists
+                        if (type(item) is list):
+                            print '\t tuple of lists'
+                            for idx_2, elem in enumerate(item):
+                                # tuple of lists of Tensors
+                                if (type(item) is torch.Tensor):
+                                    np.save(path + "/" + "iter-" + str(iteration-1) + name  + "_" + str(idx) + "_" + str(idx_2) + "." + str(item.size()), item.detach().cpu().numpy())
+                        # tuple of ImageList 
+                        elif (type(item) is maskrcnn_benchmark.structures.image_list.ImageList):
+                            print '\t tuple of ImageList'
+                        # tuple of Tensors
+                        elif (type(item) is torch.Tensor):
+                            print '\t tuple of Tensors'
+                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
+                        elif (type(item) is dict):
+                            print '\t tuple of dicts'
+                        else:
+                            print '\t type' + str(type(item)) + 'does not support!'
+                            assert False
+                elif type(entity_to_save) is list:
+                    print 'list!!!'
+                    for idx, item in enumerate(entity_to_save):
+                        # list of Tensors
+                        if (type(iter) is torch.Tensor):
+                            print '\t list of Tensors'
+                elif type(entity_to_save) is torch.Tensor:
+                    print 'torch.Tensor!!!'
+                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "." + str(entity_to_save.size()), entity_to_save.detach().cpu().numpy())
+                else:
+                    assert False
         def fw_callback(module, input, output):
             module_name = module2name[module]
             print 'We are in ' + module_name + "'s fw_callback function."
