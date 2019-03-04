@@ -62,31 +62,64 @@ def do_train(
     module2name = {}
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
         data_time = time.time() - end
-        # 由于不同module的输入输出类型不同，save_tensor保存blob的策略一边验证一边修改
-        # 等全网络验证完成之后会产生一个比较好的存储blob的目录结构
         def save_tensor(path, name, entity_to_save):
-            if iteration - 1 == 0:
                 if type(entity_to_save) is tuple:
                     print 'tuple!!!'
                     for idx, item in enumerate(entity_to_save):
                         # tuple of lists
                         if (type(item) is list):
                             print '\t tuple of lists'
-                            for idx_2, elem in enumerate(item):
+                            for idx_2, item_2 in enumerate(item):
                                 # tuple of lists of Tensors
-                                if (type(item) is torch.Tensor):
-                                    np.save(path + "/" + "iter-" + str(iteration-1) + name  + "_" + str(idx) + "_" + str(idx_2) + "." + str(item.size()), item.detach().cpu().numpy())
+                                if type(item_2) is torch.Tensor:
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" \
+                                        + str(idx) + "_" + str(idx_2) + "." + str(item_2.size()), \
+                                            item_2.detach().cpu().numpy())
+                                # tuple of lists of lists
+                                elif type(item_2) is list:
+                                    for idx_3, item_3 in enumerate(item_2):
+                                        if (type(item_3) is maskrcnn_benchmark.structures.bounding_box.BoxList):
+                                            np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + \
+                                                str(idx) + "_" + str(idx_2) + "_" + str(idx_3) + "." + \
+                                                    str(item_3.bbox.size()), item_3.bbox.detach().cpu().numpy())
+                                        else:
+                                            assert False
+                                # tuple of lists of BoxList
+                                elif type(item_2) is maskrcnn_benchmark.structures.bounding_box.BoxList:
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + "_" + \
+                                        str(idx_2) + "." + str(item_2.bbox.size()), item_2.bbox.detach().cpu().numpy())
+                                else:
+                                    assert False
+                        # tuple of dicts
+                        elif (type(item) is dict):
+                            print '\t tuple of dicts'
+                            for item_2 in item.items():
+                                np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + "_" + \
+                                    item_2[0] + "." + str(item_2[1].size()), item_2[1].detach().cpu().numpy())
+                        # tuple of tuples
+                        elif (type(item) is tuple):
+                            print '\t tuple of tuples'
+                            for idx_2, item_2 in enumerate(item):
+                                # tuple of tuples of Tensors
+                                if (type(item_2) is torch.Tensor):
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + \
+                                        "_" + str(idx_2) + "." + str(item_2.size()), item_2.detach().cpu().numpy())
+                                else:
+                                    assert False
                         # tuple of ImageList 
                         elif (type(item) is maskrcnn_benchmark.structures.image_list.ImageList):
                             print '\t tuple of ImageList'
+                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + str(idx) + \
+                                "." + str(item.tensors.size()), item.tensors.detach().cpu().numpy())
                         # tuple of Tensors
                         elif (type(item) is torch.Tensor):
                             print '\t tuple of Tensors'
-                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
-                        elif (type(item) is dict):
-                            print '\t tuple of dicts'
+                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + \
+                                str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
+                        # tuple of Nones, do not save Nones
+                        elif (type(item) is type(None)):
+                            print '\t tuple of Nones'
                         else:
-                            print '\t type' + str(type(item)) + 'does not support!'
                             assert False
                 elif type(entity_to_save) is list:
                     print 'list!!!'
@@ -94,9 +127,12 @@ def do_train(
                         # list of Tensors
                         if (type(iter) is torch.Tensor):
                             print '\t list of Tensors'
+                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "_" + \
+                                str(idx) + "." + str(item.size()), item.detach().cpu().numpy())
                 elif type(entity_to_save) is torch.Tensor:
                     print 'torch.Tensor!!!'
-                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "." + str(entity_to_save.size()), entity_to_save.detach().cpu().numpy())
+                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name + "." + \
+                        str(entity_to_save.size()), entity_to_save.cpu().detach().cpu().numpy())
                 else:
                     assert False
         def fw_callback(module, input, output):
@@ -105,19 +141,17 @@ def do_train(
             path = 'dump' + module_name
             if not os.path.exists(path):
                 os.makedirs(path)
-            if iteration - 1 == 0:
-                save_tensor(path, "in", input)
-                save_tensor(path, "out", output)
+            save_tensor(path, "in", input)
+            save_tensor(path, "out", output)
             return
         def bw_callback(module, grad_input, grad_output):
             module_name = module2name[module]
-            print 'We are in ' + module_name + "'s fw_callback function."
+            print 'We are in ' + module_name + "'s bw_callback function."
             path = 'dump' + module_name
             if not os.path.exists(path):
                 os.makedirs(path)
-            if iteration - 1 == 0:
-                save_tensor(path, "in_diff", grad_input)
-                save_tensor(path, "out_diff", grad_output)
+            save_tensor(path, "in_diff", grad_input)
+            save_tensor(path, "out_diff", grad_output)
             return
         def register_callback_rec_for_all_modules(module, prefix=""):
             for (n, m) in module.named_children():
@@ -138,8 +172,8 @@ def do_train(
                     m.register_backward_hook(bw_callback)
                 register_callback_rec_for_particular_modules(m, names, new_prefix)
         # save modules' in, out, in_diff, out_diff
-        # if iteration is 0:
-        #     register_callback_rec_for_particular_modules(model, ['/backbone', '/rpn', '/roi_heads'])
+        register_callback_rec_for_all_modules(model)
+        # register_callback_rec_for_particular_modules(model, ['/backbone', '/rpn', '/roi_heads'])
 
         iteration = iteration + 1
         arguments["iteration"] = iteration

@@ -203,10 +203,14 @@ class BoxList(object):
         return bbox
 
     def __getitem__(self, item):
-        bbox = BoxList(self.bbox[item], self.size, self.mode)
-        for k, v in self.extra_fields.items():
-            bbox.add_field(k, v[item])
-        return bbox
+        # xfjiang: fix construction of BoxList in callback
+        if isinstance(item, int):
+            return self.bbox
+        else:
+            bbox = BoxList(self.bbox[item], self.size, self.mode)
+            for k, v in self.extra_fields.items():
+                bbox.add_field(k, v[item])
+            return bbox
 
     def __len__(self):
         return self.bbox.shape[0]
