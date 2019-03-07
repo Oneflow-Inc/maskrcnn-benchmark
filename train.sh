@@ -1,5 +1,6 @@
 rm -r ./dump
 rm last_checkpoint
+rm model_final.pth
 rm log.txt
 # export NGPUS=1
 # python -m torch.distributed.launch --nproc_per_node=$NGPUS \
