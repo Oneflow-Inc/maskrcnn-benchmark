@@ -79,15 +79,44 @@ class RPNLossComputation(object):
         """
         Arguments:
             anchors (list[BoxList])
+                example:
+                [
+                   [BoxList(num_boxes=163200, image_width=1066, image_height=800, mode=xyxy),
+                    BoxList(num_boxes=40800, image_width=1066, image_height=800, mode=xyxy), 
+                    BoxList(num_boxes=10200, image_width=1066, image_height=800, mode=xyxy), 
+                    BoxList(num_boxes=2550, image_width=1066, image_height=800, mode=xyxy), 
+                    BoxList(num_boxes=663, image_width=1066, image_height=800, mode=xyxy)]
+                ]
             objectness (list[Tensor])
+                example:
+                list of <class 'torch.Tensor'>, len(objectness) == 5
+                shape of each torch.Tensor:
+                [(1, 3, 200, 272),
+                 (1, 3, 100, 136),
+                 (1, 3, 50, 68),
+                 (1, 3, 25, 34),
+                 (1, 3, 13, 17)]
             box_regression (list[Tensor])
+                example:
+                list of <class 'torch.Tensor'>, len(bbox_regression) == 5
+                [(1, 12, 200, 272),
+                 (1, 12, 100, 136),
+                 (1, 12, 50, 68),
+                 (1, 12, 25, 34),
+                 (1, 12, 13, 17)]
             targets (list[BoxList])
-
+                example:
+                [BoxList(num_boxes=23, image_width=1066, image_height=800, mode=xyxy)]
+                
         Returns:
             objectness_loss (Tensor)
-            box_loss (Tensor
+            box_loss (Tensor)
         """
+
+        # anchors: (R, 4)
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
+        # labels: (R, 1)
+        # regression_targets: (R, 4)
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
         sampled_pos_inds = torch.nonzero(torch.cat(sampled_pos_inds, dim=0)).squeeze(1)
