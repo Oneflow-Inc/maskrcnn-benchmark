@@ -20,6 +20,8 @@ from maskrcnn_benchmark.layers import FrozenBatchNorm2d
 from maskrcnn_benchmark.layers import Conv2d
 from maskrcnn_benchmark.utils.registry import Registry
 
+import os
+import numpy as np
 
 # ResNet stage specification
 StageSpec = namedtuple(
@@ -115,10 +117,23 @@ class ResNet(nn.Module):
     def forward(self, x):
         outputs = []
         x = self.stem(x)
+
+        # xfjiang: save blobs
+        if not os.path.exists('./new_dump/backbone'):
+            os.makedirs('./new_dump/backbone')
+        save_path = "./new_dump/backbone/backbone-stem-out" + "." + str(x.size())
+        np.save(save_path, x.detach().cpu().numpy())
+
         for stage_name in self.stages:
             x = getattr(self, stage_name)(x)
             if self.return_features[stage_name]:
                 outputs.append(x)
+
+        # xfjiang: save blobs
+        for idx, x in enumerate(outputs):
+            save_path = "./new_dump/backbone/backbone-layer" + str(idx + 1) + "-out" + "." + str(x.size())
+            np.save(save_path, x.detach().cpu().numpy())
+
         return outputs
 
 

@@ -72,21 +72,21 @@ def do_train(
                             for idx_2, item_2 in enumerate(item):
                                 # tuple of lists of Tensors
                                 if type(item_2) is torch.Tensor:
-                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" \
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name  + "_" \
                                         + str(idx) + "_" + str(idx_2) + "." + str(item_2.size()), \
                                             item_2.detach().cpu().numpy())
                                 # tuple of lists of lists
                                 elif type(item_2) is list:
                                     for idx_3, item_3 in enumerate(item_2):
                                         if (type(item_3) is maskrcnn_benchmark.structures.bounding_box.BoxList):
-                                            np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + \
+                                            np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name  + "_" + \
                                                 str(idx) + "_" + str(idx_2) + "_" + str(idx_3) + "." + \
                                                     str(item_3.bbox.size()), item_3.bbox.detach().cpu().numpy())
                                         else:
                                             assert False
                                 # tuple of lists of BoxList
                                 elif type(item_2) is maskrcnn_benchmark.structures.bounding_box.BoxList:
-                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + "_" + \
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name  + "_" + str(idx) + "_" + \
                                         str(idx_2) + "." + str(item_2.bbox.size()), item_2.bbox.detach().cpu().numpy())
                                 else:
                                     assert False
@@ -94,7 +94,7 @@ def do_train(
                         elif (type(item) is dict):
                             print '\t tuple of dicts'
                             for item_2 in item.items():
-                                np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + "_" + \
+                                np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name  + "_" + str(idx) + "_" + \
                                     item_2[0] + "." + str(item_2[1].size()), item_2[1].detach().cpu().numpy())
                         # tuple of tuples
                         elif (type(item) is tuple):
@@ -102,7 +102,7 @@ def do_train(
                             for idx_2, item_2 in enumerate(item):
                                 # tuple of tuples of Tensors
                                 if (type(item_2) is torch.Tensor):
-                                    np.save(path + "/" + "iter-" + str(iteration - 1) + name  + "_" + str(idx) + \
+                                    np.save(path + "/" + "iter-" + str(iteration - 1) + "." + name  + "_" + str(idx) + \
                                         "_" + str(idx_2) + "." + str(item_2.size()), item_2.detach().cpu().numpy())
                                 else:
                                     assert False
