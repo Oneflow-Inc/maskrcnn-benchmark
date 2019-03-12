@@ -51,6 +51,9 @@ _C.INPUT.PIXEL_STD = [1., 1., 1.]
 # Convert image to BGR format (for Caffe2 models), in range 0-255
 _C.INPUT.TO_BGR255 = True
 
+# of compare test conf
+_C.INPUT.FLIP_PROB_TRAIN = 0.5
+
 
 # -----------------------------------------------------------------------------
 # Dataset
@@ -74,6 +77,9 @@ _C.DATALOADER.SIZE_DIVISIBILITY = 0
 # is compatible. This groups portrait images together, and landscape images
 # are not batched with portrait images.
 _C.DATALOADER.ASPECT_RATIO_GROUPING = True
+
+# of compare test conf
+_C.DATALOADER.SEQUENTIAL_SAMPLE = False
 
 # ---------------------------------------------------------------------------- #
 # Backbone options
@@ -137,7 +143,7 @@ _C.MODEL.RPN.FPN_POST_NMS_TOP_N_TEST = 2000
 # Custom rpn head, empty to use default conv or separable conv
 _C.MODEL.RPN.RPN_HEAD = "SingleConvRPNHead"
 
-# Custom debug conf
+# of compare test conf
 _C.MODEL.RPN.RANDOM_SAMPLE = True
 
 
