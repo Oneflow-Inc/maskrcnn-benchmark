@@ -179,9 +179,15 @@ class RPNLossComputation(object):
             size_average=False,
         ) / (sampled_inds.numel())
 
+        box_loss_save_path = "./new_dump/rpn/box_loss" + "." + str(box_loss.size())
+        np.save(box_loss_save_path, box_loss.cpu().detach().numpy())
+
         objectness_loss = F.binary_cross_entropy_with_logits(
             objectness[sampled_inds], labels[sampled_inds]
         )
+
+        objectness_loss_save_path = "./new_dump/rpn/objectness_loss" + "." + str(objectness_loss.size())
+        np.save(objectness_loss_save_path, objectness_loss.cpu().detach().numpy())
 
         return objectness_loss, box_loss
 

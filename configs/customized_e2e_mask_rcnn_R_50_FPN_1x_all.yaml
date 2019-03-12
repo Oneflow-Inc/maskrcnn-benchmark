@@ -50,6 +50,7 @@ MODEL:
     POSITIVE_FRACTION: 0.25
     SCORE_THRESH: 0.05
     USE_FPN: True
+    RANDOM_SAMPLE: False
   ROI_MASK_HEAD:
     CONV_LAYERS: (256, 256, 256, 256)
     FEATURE_EXTRACTOR: MaskRCNNFPNFeatureExtractor
@@ -81,11 +82,11 @@ MODEL:
     RPN_HEAD: SingleConvRPNHead
     STRADDLE_THRESH: 0
     USE_FPN: True
+    RANDOM_SAMPLE: False
   RPN_ONLY: False
   # WEIGHT: catalog://ImageNetPretrained/MSRA/R-50
-  WEIGHT: /home/xfjiang/repos/oneflow_toolkit/oneflow_toolkit/detection/convert_pytorch_model_to_of_model/examples/mask_rcnn_R_50_FPN_1x/e2e_mask_rcnn_R_50_FPN_1x.pth
+  WEIGHT: /model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth
 OUTPUT_DIR: .
-PATHS_CATALOG: /home/xfjiang/repos/maskrcnn-benchmark/maskrcnn_benchmark/config/paths_catalog.py
 SOLVER:
   BASE_LR: 0.0025
   BIAS_LR_FACTOR: 2
