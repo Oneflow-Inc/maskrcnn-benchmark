@@ -179,7 +179,7 @@ def do_train(
                     m.register_backward_hook(bw_callback)
                 register_callback_rec_for_particular_modules(m, names, new_prefix)
         # save modules' in, out, in_diff, out_diff
-        register_callback_rec_for_all_modules(model)
+        # register_callback_rec_for_all_modules(model)
         # register_callback_rec_for_particular_modules(model, ['/backbone', '/rpn', '/roi_heads'])
 
         iteration = iteration + 1
