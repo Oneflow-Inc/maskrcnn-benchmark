@@ -137,6 +137,9 @@ _C.MODEL.RPN.FPN_POST_NMS_TOP_N_TEST = 2000
 # Custom rpn head, empty to use default conv or separable conv
 _C.MODEL.RPN.RPN_HEAD = "SingleConvRPNHead"
 
+# Custom debug conf
+_C.MODEL.RPN.RANDOM_SAMPLE = True
+
 
 # ---------------------------------------------------------------------------- #
 # ROI HEADS options
