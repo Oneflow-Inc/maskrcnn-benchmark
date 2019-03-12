@@ -15,6 +15,7 @@ from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 
+import numpy as np
 
 class RPNLossComputation(object):
     """
@@ -113,10 +114,12 @@ class RPNLossComputation(object):
             box_loss (Tensor)
         """
 
-        # anchors: (R, 4)
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
-        # labels: (R, 1)
-        # regression_targets: (R, 4)
+
+        # xfjiang: save blobs
+        generated_anchors_save_path = "./new_dump/rpn/generated_anchors" + "." + str(anchors[0].bbox.size())
+        np.save(generated_anchors_save_path, anchors[0].bbox.detach().cpu().numpy())
+
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
         sampled_pos_inds = torch.nonzero(torch.cat(sampled_pos_inds, dim=0)).squeeze(1)
@@ -150,6 +153,24 @@ class RPNLossComputation(object):
 
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
+
+        # xfjiang: save blobs
+        sampled_objectness_npy = objectness[sampled_inds].cpu().detach().numpy()
+        sampled_objectness_save_path = "./new_dump/rpn/sampled_objectness" + "." + str(sampled_objectness_npy.shape)
+        np.save(sampled_objectness_save_path, sampled_objectness_npy)
+        sampled_labels_npy = labels[sampled_inds].cpu().detach().numpy()
+        sampled_labels_save_path = "./new_dump/rpn/sampled_labels" + "." + str(sampled_labels_npy.shape)
+        np.save(sampled_labels_save_path, sampled_labels_npy)
+        sampled_box_regression_npy = box_regression[sampled_pos_inds].cpu().detach().numpy()
+        sampled_box_regression_save_path = "./new_dump/rpn/sampled_box_regression" + "." + str(sampled_box_regression_npy.shape)
+        np.save(sampled_box_regression_save_path, sampled_box_regression_npy)
+        sampled_regression_targets_npy = regression_targets[sampled_pos_inds].cpu().detach().numpy()
+        sampled_regression_targets_save_path = "./new_dump/rpn/sampled_regression_targets" + "." + str(sampled_regression_targets_npy.shape)
+        np.save(sampled_regression_targets_save_path, sampled_regression_targets_npy)
+        sampled_pos_inds_save_path = "./new_dump/rpn/sampled_pos_inds" + "." + str(sampled_pos_inds.size())
+        np.save(sampled_pos_inds_save_path, sampled_pos_inds.cpu().detach().numpy())
+        sampled_inds_save_path = "./new_dump/rpn/sampled_inds" + "." + str(sampled_inds.size())
+        np.save(sampled_inds_save_path, sampled_inds.cpu().detach().numpy())
 
         box_loss = smooth_l1_loss(
             box_regression[sampled_pos_inds],

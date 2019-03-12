@@ -3,8 +3,8 @@ DATALOADER:
   NUM_WORKERS: 4
   SIZE_DIVISIBILITY: 32
 DATASETS:
-  TEST: ('coco_1_image_test',)
-  TRAIN: ('coco_1_image_test', 'coco_1_image_test')
+  TEST: ('coco_1_image_train',)
+  TRAIN: ('coco_1_image_train', 'coco_1_image_train')
 INPUT:
   MAX_SIZE_TEST: 1333
   MAX_SIZE_TRAIN: 1333

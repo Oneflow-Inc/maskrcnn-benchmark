@@ -63,18 +63,9 @@ def do_train(
     end = time.time()
     module2name = {}
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
-        # xfjiang: replace images and targets
-        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        # print(images.image_sizes), (800, 1066), of (800, 1088)?
-        # print(type(targets))
-        # for x in targets:
-        #     print(type(x))
-        #     print(x)
-        #     print(x.bbox)
-        oneflow_images = np.load('/dataset/mask_rcnn/sample_1_val_of_decoded_blobs/encoded_(1, 800, 1088, 3).npy')
+        # xfjiang: replace images
+        oneflow_images = np.load('/dataset/mask_rcnn/sample_1_train_of_decoded_blobs/encoded_(1, 1280, 800, 3).npy')
         images.tensors = torch.tensor(np.transpose(oneflow_images, (0, 3, 1, 2)))
-        # oneflow_gt_bbox = np.load('/dataset/mask_rcnn/sample_1_val_of_decoded_blobs/fixed_gt_bbox_(23, 4).npy')
-        # targets[0] = BoxList(oneflow_gt_bbox, images.image_sizes[0])
 
         data_time = time.time() - end
         def save_tensor(path, name, entity_to_save):

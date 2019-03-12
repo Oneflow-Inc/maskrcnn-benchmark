@@ -37,6 +37,11 @@ class BalancedPositiveNegativeSampler(object):
         for matched_idxs_per_image in matched_idxs:
             positive = torch.nonzero(matched_idxs_per_image >= 1).squeeze(1)
             negative = torch.nonzero(matched_idxs_per_image == 0).squeeze(1)
+            
+            # import numpy as np
+            # print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            # save_path = "./new_dump/rpn/negative" + "." + str(negative.size())
+            # np.save(save_path, negative.detach().cpu().numpy())
 
             num_pos = int(self.batch_size_per_image * self.positive_fraction)
             # protect against not enough positive examples
@@ -47,10 +52,11 @@ class BalancedPositiveNegativeSampler(object):
 
             # randomly select positive and negative examples
             perm1 = torch.randperm(positive.numel(), device=positive.device)[:num_pos]
-            perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
-
+            
+            # xfjiang: close random
+            # perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
             pos_idx_per_image = positive[perm1]
-            neg_idx_per_image = negative[perm2]
+            neg_idx_per_image = torch.topk(negative, num_neg, dim=0, sorted=True, largest=False)[0]
 
             # create binary mask from indices
             pos_idx_per_image_mask = torch.zeros_like(
