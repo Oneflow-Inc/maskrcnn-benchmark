@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+import numpy as np
 
 class FPN(nn.Module):
     """
@@ -65,6 +66,11 @@ class FPN(nn.Module):
         if self.top_blocks is not None:
             last_results = self.top_blocks(results[-1])
             results.extend(last_results)
+
+        # xfjiang: save blobs
+        for idx, x in enumerate(results):
+            save_path = "./new_dump/backbone/fpn" + str(idx + 1) + "-out" + "." + str(x.size())
+            np.save(save_path, x.detach().cpu().numpy())
 
         return tuple(results)
 

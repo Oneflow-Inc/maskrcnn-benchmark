@@ -9,6 +9,8 @@ from .loss import make_rpn_loss_evaluator
 from .anchor_generator import make_anchor_generator
 from .inference import make_rpn_postprocessor
 
+import numpy as np
+import os
 
 @registry.RPN_HEADS.register("SingleConvRPNHead")
 class RPNHead(nn.Module):
@@ -115,9 +117,27 @@ class RPNModule(torch.nn.Module):
                 boxes = self.box_selector_train(
                     anchors, objectness, rpn_box_regression, targets
                 )
+
+        # xfjiang: save blobs
+        if not os.path.exists("./new_dump/rpn/"):
+            os.makedirs("./new_dump/rpn/")
+        # print(type(boxes))      # list
+        # print(len(boxes))       # 1
+        # print(type(boxes[0]))   # <class 'maskrcnn_benchmark.structures.bounding_box.BoxList'>
+        bbox = boxes[0].bbox
+        bbox_save_path = "./new_dump/rpn/bbox" + "." + str(bbox.size())
+        np.save(bbox_save_path, bbox.detach().cpu().numpy())
+        
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
         )
+
+        # xfjiang: save blobs
+        loss_objectness_save_path = "./new_dump/rpn/" + "rpn_objectiness_loss" + "." + str(loss_objectness.size())
+        loss_rpn_box_reg_save_path = "./new_dump/rpn/" + "rpn_box_loss" + "." + str(loss_objectness.size())
+        np.save(loss_objectness_save_path ,loss_objectness.detach().cpu().numpy())
+        np.save(loss_rpn_box_reg_save_path, loss_rpn_box_reg.detach().cpu().numpy())
+
         losses = {
             "loss_objectness": loss_objectness,
             "loss_rpn_box_reg": loss_rpn_box_reg,
