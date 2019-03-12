@@ -7,7 +7,7 @@ class BalancedPositiveNegativeSampler(object):
     This class samples batches, ensuring that they contain a fixed proportion of positives
     """
 
-    def __init__(self, batch_size_per_image, positive_fraction):
+    def __init__(self, batch_size_per_image, positive_fraction, random_sample):
         """
         Arguments:
             batch_size_per_image (int): number of elements to be selected per image
@@ -15,6 +15,7 @@ class BalancedPositiveNegativeSampler(object):
         """
         self.batch_size_per_image = batch_size_per_image
         self.positive_fraction = positive_fraction
+        self.random_sample = random_sample
 
     def __call__(self, matched_idxs):
         """
@@ -46,11 +47,14 @@ class BalancedPositiveNegativeSampler(object):
             num_neg = min(negative.numel(), num_neg)
 
             # randomly select positive and negative examples
-            perm1 = torch.randperm(positive.numel(), device=positive.device)[:num_pos]
-            perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
-
-            pos_idx_per_image = positive[perm1]
-            neg_idx_per_image = negative[perm2]
+            if self.random_sample:
+                perm1 = torch.randperm(positive.numel(), device=positive.device)[:num_pos]
+                perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
+                pos_idx_per_image = positive[perm1]
+                neg_idx_per_image = negative[perm2]
+            else:
+                pos_idx_per_image = torch.topk(positive, num_pos, dim=0, largest=False, sorted=True)[0]
+                neg_idx_per_image = torch.topk(negative, num_neg, dim=0, largest=False, sorted=True)[0]
 
             # create binary mask from indices
             pos_idx_per_image_mask = torch.zeros_like(
