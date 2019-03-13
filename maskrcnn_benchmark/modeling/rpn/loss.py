@@ -4,6 +4,7 @@ This file contains specific functions for computing losses on the RPN
 file
 """
 
+import os
 import torch
 from torch.nn import functional as F
 
@@ -117,6 +118,8 @@ class RPNLossComputation(object):
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
 
         # xfjiang: save blobs
+        if not os.path.exists("./new_dump/rpn/"):
+            os.makedirs("./new_dump/rpn/")
         generated_anchors_save_path = "./new_dump/rpn/generated_anchors" + "." + str(anchors[0].bbox.size())
         np.save(generated_anchors_save_path, anchors[0].bbox.detach().cpu().numpy())
 
@@ -133,6 +136,7 @@ class RPNLossComputation(object):
         # same format as the labels. Note that the labels are computed for
         # all feature levels concatenated, so we keep the same representation
         # for the objectness and the box_regression
+        level = 1
         for objectness_per_level, box_regression_per_level in zip(
             objectness, box_regression
         ):
@@ -145,6 +149,10 @@ class RPNLossComputation(object):
             box_regression_per_level = box_regression_per_level.reshape(N, -1, 4)
             objectness_flattened.append(objectness_per_level)
             box_regression_flattened.append(box_regression_per_level)
+            
+            level_objectness_save_path = "./new_dump/rpn/objectness_{}".format(level) + "." + str(objectness_per_level.shape)
+            np.save(level_objectness_save_path, objectness_per_level.cpu().detach().numpy())
+            level += 1
         # concatenate on the first dimension (representing the feature levels), to
         # take into account the way the labels were generated (with all feature maps
         # being concatenated as well)

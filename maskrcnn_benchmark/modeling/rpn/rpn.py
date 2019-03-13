@@ -118,16 +118,11 @@ class RPNModule(torch.nn.Module):
                     anchors, objectness, rpn_box_regression, targets
                 )
 
-        # xfjiang: save blobs
-        if not os.path.exists("./new_dump/rpn/"):
-            os.makedirs("./new_dump/rpn/")
-        # print(type(boxes))      # list
-        # print(len(boxes))       # 1
-        # print(type(boxes[0]))   # <class 'maskrcnn_benchmark.structures.bounding_box.BoxList'>
-        bbox = boxes[0].bbox
-        bbox_save_path = "./new_dump/rpn/bbox" + "." + str(bbox.size())
-        np.save(bbox_save_path, bbox.detach().cpu().numpy())
-        
+        for i, box_list in enumerate(boxes):
+            bbox = box_list.bbox
+            bbox_save_path = "./new_dump/proposal/{}_out_rois".format(i) + "." + str(bbox.size())
+            np.save(bbox_save_path, bbox.detach().cpu().numpy())
+
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
         )
