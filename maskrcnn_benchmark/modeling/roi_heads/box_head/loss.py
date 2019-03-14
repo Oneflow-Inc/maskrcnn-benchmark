@@ -150,6 +150,11 @@ class FastRCNNLossComputation(object):
 
         classification_loss = F.cross_entropy(class_logits, labels)
 
+        # xfjiang: save blobs
+        import numpy as np
+        classification_loss_save_path = "./new_dump/box/classification_loss" + "." + str(classification_loss.size())
+        np.save(classification_loss_save_path, classification_loss.detach().cpu().numpy())
+
         # get indices that correspond to the regression targets for
         # the corresponding ground truth labels, to be used with
         # advanced indexing
@@ -168,6 +173,11 @@ class FastRCNNLossComputation(object):
             beta=1,
         )
         box_loss = box_loss / labels.numel()
+
+        # xfjiang: save blobs
+        import numpy as np
+        box_loss_save_path = "./new_dump/box/box_loss" + "." + str(box_loss.size())
+        np.save(box_loss_save_path, box_loss.detach().cpu().numpy())
 
         return classification_loss, box_loss
 
