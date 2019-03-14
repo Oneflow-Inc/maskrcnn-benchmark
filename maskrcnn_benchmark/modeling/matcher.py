@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+import numpy
 import torch
 
 
@@ -50,6 +52,13 @@ class Matcher(object):
             [0, M - 1] or a negative value indicating that prediction i could not
             be matched.
         """
+        # save tensor
+        # save_dir = './new_dump/box'
+        # if not os.path.exists(save_dir):
+        #     os.makedirs(save_dir)
+        # match_quality_matrix_save_path = save_dir + '/match_quality_matrix' + '.' + str(match_quality_matrix.size())
+        # numpy.save(match_quality_matrix_save_path, match_quality_matrix.cpu().detach().numpy())
+
         if match_quality_matrix.numel() == 0:
             # empty targets or proposals not supported during training
             if match_quality_matrix.shape[0] == 0:
@@ -64,6 +73,13 @@ class Matcher(object):
         # match_quality_matrix is M (gt) x N (predicted)
         # Max over gt elements (dim 0) to find best gt candidate for each prediction
         matched_vals, matches = match_quality_matrix.max(dim=0)
+        
+        # save tensor
+        # matched_vals_save_path = save_dir + '/matched_vals' + '.' + str(matched_vals.size())
+        # numpy.save(matched_vals_save_path, matched_vals.cpu().detach().numpy())
+        # matches_save_path = save_dir + '/matchs' + '.' + str(matches.size())
+        # numpy.save(matches_save_path, matches.cpu().detach().numpy())
+
         if self.allow_low_quality_matches:
             all_matches = matches.clone()
 

@@ -50,11 +50,12 @@ class BalancedPositiveNegativeSampler(object):
             if self.random_sample:
                 perm1 = torch.randperm(positive.numel(), device=positive.device)[:num_pos]
                 perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
-                pos_idx_per_image = positive[perm1]
-                neg_idx_per_image = negative[perm2]
             else:
-                pos_idx_per_image = torch.topk(positive, num_pos, dim=0, largest=False, sorted=True)[0]
-                neg_idx_per_image = torch.topk(negative, num_neg, dim=0, largest=False, sorted=True)[0]
+                perm1 = torch.arange(positive.numel(), device=positive.device)[:num_pos]
+                perm2 = torch.arange(negative.numel(), device=negative.device)[:num_neg]
+
+            pos_idx_per_image = positive[perm1]
+            neg_idx_per_image = negative[perm2]
 
             # create binary mask from indices
             pos_idx_per_image_mask = torch.zeros_like(

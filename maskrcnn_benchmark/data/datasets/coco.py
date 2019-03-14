@@ -8,7 +8,8 @@ from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 
 class COCODataset(torchvision.datasets.coco.CocoDetection):
     def __init__(
-        self, ann_file, root, remove_images_without_annotations, transforms=None
+        self, ann_file, root, remove_images_without_annotations, transforms=None, 
+        use_contiguous_category_id=True
     ):
         super(COCODataset, self).__init__(root, ann_file)
         # sort indices for reproducible results
@@ -30,6 +31,7 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         }
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self.transforms = transforms
+        self.use_contiguous_category_id = use_contiguous_category_id
 
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
@@ -43,7 +45,8 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         target = BoxList(boxes, img.size, mode="xywh").convert("xyxy")
 
         classes = [obj["category_id"] for obj in anno]
-        classes = [self.json_category_id_to_contiguous_id[c] for c in classes]
+        if self.use_contiguous_category_id:
+            classes = [self.json_category_id_to_contiguous_id[c] for c in classes]
         classes = torch.tensor(classes)
         target.add_field("labels", classes)
 

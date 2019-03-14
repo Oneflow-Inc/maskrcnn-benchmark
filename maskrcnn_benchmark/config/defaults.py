@@ -64,6 +64,8 @@ _C.DATASETS.TRAIN = ()
 # List of the dataset names for testing, as present in paths_catalog.py
 _C.DATASETS.TEST = ()
 
+_C.DATASETS.USE_CONTIGUOUS_CATEGORY_ID = True
+
 # -----------------------------------------------------------------------------
 # DataLoader
 # -----------------------------------------------------------------------------

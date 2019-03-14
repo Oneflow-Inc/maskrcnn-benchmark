@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+import numpy
 import torch
 from torch import nn
 
@@ -40,6 +42,20 @@ class ROIBoxHead(torch.nn.Module):
             # positive / negative ratio
             with torch.no_grad():
                 proposals = self.loss_evaluator.subsample(proposals, targets)
+
+        box_save_dir = './new_dump/box'
+        if not os.path.exists(box_save_dir):
+            os.makedirs(box_save_dir)
+        for i, proposals_per_im in enumerate(proposals):
+            proposals_bbox = proposals_per_im.bbox
+            save_path = box_save_dir + '/{}_proposals_bbox'.format(i)
+            numpy.save(save_path, proposals_bbox.cpu().detach().numpy())
+            proposals_labels = proposals_per_im.get_field("labels")
+            save_path = box_save_dir + '/{}_proposals_labels'.format(i)
+            numpy.save(save_path, proposals_labels.cpu().detach().numpy())
+            # proposals_reg_targets = proposals_per_im.get_field("regression_targets")
+            # save_path = box_save_dir + '/{}_proposals_reg_targets'.format(i)
+            # numpy.save(save_path, proposals_reg_targets.cpu().detach().numpy())
 
         # extract features that will be fed to the final classifier. The
         # feature_extractor generally corresponds to the pooler + heads

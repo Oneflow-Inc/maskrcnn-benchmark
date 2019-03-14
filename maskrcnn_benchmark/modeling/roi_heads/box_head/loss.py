@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+import numpy
 import torch
 from torch.nn import functional as F
 
@@ -105,6 +107,16 @@ class FastRCNNLossComputation(object):
             proposals_per_image = proposals[img_idx][img_sampled_inds]
             proposals[img_idx] = proposals_per_image
 
+            save_dir = './new_dump/box'
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            pos_mask_save_path = save_dir + '/{}_pos_mask'.format(img_idx)
+            numpy.save(pos_mask_save_path, pos_inds_img.cpu().detach().numpy())
+            neg_mask_save_path = save_dir + '/{}_neg_mask'.format(img_idx)
+            numpy.save(neg_mask_save_path, neg_inds_img.cpu().detach().numpy())
+            sampled_inds_mask_save_path = save_dir + '/{}_sampled_inds'.format(img_idx)
+            numpy.save(sampled_inds_mask_save_path, img_sampled_inds.cpu().detach().numpy())
+
         self._proposals = proposals
         return proposals
 
@@ -144,6 +156,10 @@ class FastRCNNLossComputation(object):
         sampled_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1)
         labels_pos = labels[sampled_pos_inds_subset]
         map_inds = 4 * labels_pos[:, None] + torch.tensor([0, 1, 2, 3], device=device)
+
+        reg_targets = regression_targets[sampled_pos_inds_subset]
+        regression_targets_save_path = './new_dump/box/regression_targets' + str(reg_targets.size())
+        numpy.save(regression_targets_save_path, reg_targets.cpu().detach().numpy())
 
         box_loss = smooth_l1_loss(
             box_regression[sampled_pos_inds_subset[:, None], map_inds],
