@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import numpy
 import torch
 from torch.nn import functional as F
 
@@ -112,6 +113,10 @@ class MaskRCNNLossComputation(object):
             mask_loss (Tensor): scalar tensor containing the loss
         """
         labels, mask_targets = self.prepare_targets(proposals, targets)
+
+        for i, mask_targets_per_im in enumerate(mask_targets):
+            mask_targets_save_path = './new_dump/mask/{}_mask_targets'.format(i) + '.' + str(mask_targets_per_im.size())
+            numpy.save(mask_targets_save_path, mask_targets_per_im.cpu().detach().numpy())
 
         labels = cat(labels, dim=0)
         mask_targets = cat(mask_targets, dim=0)

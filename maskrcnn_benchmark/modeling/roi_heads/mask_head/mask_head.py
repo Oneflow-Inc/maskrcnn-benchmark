@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+import numpy
 import torch
 from torch import nn
 
@@ -57,11 +59,23 @@ class ROIMaskHead(torch.nn.Module):
             losses (dict[Tensor]): During training, returns the losses for the
                 head. During testing, returns an empty dict.
         """
+        mask_save_dir = './new_dump/mask'
+        if not os.path.exists(mask_save_dir):
+            os.makedirs(mask_save_dir)
 
         if self.training:
             # during training, only focus on positive boxes
             all_proposals = proposals
             proposals, positive_inds = keep_only_positive_boxes(proposals)
+
+            for i, proposals_per_im in enumerate(proposals):
+                boxes = proposals_per_im.bbox
+                labels = proposals_per_im.get_field('labels')
+                boxes_save_path = mask_save_dir + '/{}_proposals_boxes'.format(i) + '.' + str(boxes.size())
+                numpy.save(boxes_save_path, boxes.cpu().detach().numpy())
+                labels_save_path = mask_save_dir + '/{}_proposals_labels'.format(i) + '.' + str(labels.size())
+                numpy.save(labels_save_path, labels.cpu().detach().numpy())
+
         if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
             x = features
             x = x[torch.cat(positive_inds, dim=0)]
@@ -69,11 +83,17 @@ class ROIMaskHead(torch.nn.Module):
             x = self.feature_extractor(features, proposals)
         mask_logits = self.predictor(x)
 
+        mask_logits_save_path = mask_save_dir + '/mask_logits' + '.' + str(mask_logits.size())
+        numpy.save(mask_logits_save_path, mask_logits.cpu().detach().numpy())
+
         if not self.training:
             result = self.post_processor(mask_logits, proposals)
             return x, result, {}
 
         loss_mask = self.loss_evaluator(proposals, mask_logits, targets)
+
+        loss_save_path = mask_save_dir + '/loss' + '.' + str(loss_mask.size())
+        numpy.save(loss_save_path, loss_mask.cpu().detach().numpy())
 
         return x, all_proposals, dict(loss_mask=loss_mask)
 
