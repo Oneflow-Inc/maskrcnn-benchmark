@@ -74,6 +74,11 @@ class FPN2MLPFeatureExtractor(nn.Module):
         x = self.pooler(x, proposals)
         x = x.view(x.size(0), -1)
 
+        # xfjiang: save blobs
+        import numpy as np
+        save_path = "./new_dump/box/batch_permutation_out" + "." + str(x.size())
+        np.save(save_path, x.detach().cpu().numpy())
+
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
 
