@@ -130,9 +130,31 @@ class ResNet(nn.Module):
                 outputs.append(x)
 
         # xfjiang: save blobs
+        def fetch_backbone_layer_2_out_diff(grad):
+            save_path = './new_dump/backbone/backbone_layer_2_out_diff' + '.' + str(grad.size())
+            np.save(save_path, grad.detach().cpu().numpy())
+            return
+        def fetch_backbone_layer_3_out_diff(grad):
+            save_path = './new_dump/backbone/backbone_layer_3_out_diff' + '.' + str(grad.size())
+            np.save(save_path, grad.detach().cpu().numpy())
+            return
+        def fetch_backbone_layer_4_out_diff(grad):
+            save_path = './new_dump/backbone/backbone_layer_4_out_diff' + '.' + str(grad.size())
+            np.save(save_path, grad.detach().cpu().numpy())
+            return
         for idx, x in enumerate(outputs):
-            save_path = "./new_dump/backbone/backbone-layer" + str(idx + 1) + "-out" + "." + str(x.size())
+            idx = idx + 1
+            save_path = "./new_dump/backbone/backbone-layer{}-out".format(idx) + "." + str(x.size())
             np.save(save_path, x.detach().cpu().numpy())
+            # We do not train layer1 due to the conf
+            if idx < 2:
+                continue
+            elif idx == 2:
+                x.register_hook(fetch_backbone_layer_2_out_diff)
+            elif idx == 3:
+                x.register_hook(fetch_backbone_layer_3_out_diff)
+            elif idx == 4:
+                x.register_hook(fetch_backbone_layer_4_out_diff)
 
         return outputs
 

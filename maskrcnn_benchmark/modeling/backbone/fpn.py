@@ -67,11 +67,6 @@ class FPN(nn.Module):
             last_results = self.top_blocks(results[-1])
             results.extend(last_results)
 
-        # xfjiang: save blobs
-        for idx, x in enumerate(results):
-            save_path = "./new_dump/backbone/fpn" + str(idx + 1) + "-out" + "." + str(x.size())
-            np.save(save_path, x.detach().cpu().numpy())
-
         return tuple(results)
 
 

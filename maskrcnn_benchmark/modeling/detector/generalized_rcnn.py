@@ -50,7 +50,7 @@ class GeneralizedRCNN(nn.Module):
         features = self.backbone(images.tensors)
 
         for i, feature in enumerate(features, 1):
-            fpn_save_path = "./new_dump/fpn_layer_{}".format(i) + "." + str(feature.size())
+            fpn_save_path = "./new_dump/backbone/fpn_layer_{}".format(i) + "." + str(feature.size())
             numpy.save(fpn_save_path, feature.cpu().detach().numpy())
 
         proposals, proposal_losses = self.rpn(images, features, targets)
