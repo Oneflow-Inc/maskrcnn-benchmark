@@ -131,17 +131,19 @@ class ResNet(nn.Module):
 
         # xfjiang: save blobs
         def fetch_backbone_layer_2_out_diff(grad):
-            save_path = './new_dump/backbone/backbone_layer_2_out_diff' + '.' + str(grad.size())
+            save_path = './grad_dump/backbone/backbone_layer_2_out_diff' + '.' + str(grad.size())
             np.save(save_path, grad.detach().cpu().numpy())
             return
         def fetch_backbone_layer_3_out_diff(grad):
-            save_path = './new_dump/backbone/backbone_layer_3_out_diff' + '.' + str(grad.size())
+            save_path = './grad_dump/backbone/backbone_layer_3_out_diff' + '.' + str(grad.size())
             np.save(save_path, grad.detach().cpu().numpy())
             return
         def fetch_backbone_layer_4_out_diff(grad):
-            save_path = './new_dump/backbone/backbone_layer_4_out_diff' + '.' + str(grad.size())
+            save_path = './grad_dump/backbone/backbone_layer_4_out_diff' + '.' + str(grad.size())
             np.save(save_path, grad.detach().cpu().numpy())
             return
+        if not os.path.exists('./grad_dump/backbone'):
+            os.makedirs('./grad_dump/backbone')
         for idx, x in enumerate(outputs):
             idx = idx + 1
             save_path = "./new_dump/backbone/backbone-layer{}-out".format(idx) + "." + str(x.size())

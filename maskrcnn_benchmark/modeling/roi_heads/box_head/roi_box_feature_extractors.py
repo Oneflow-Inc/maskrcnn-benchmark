@@ -6,6 +6,8 @@ from maskrcnn_benchmark.modeling import registry
 from maskrcnn_benchmark.modeling.backbone import resnet
 from maskrcnn_benchmark.modeling.poolers import Pooler
 
+import os
+import numpy as np
 
 @registry.ROI_BOX_FEATURE_EXTRACTORS.register("ResNet50Conv5ROIFeatureExtractor")
 class ResNet50Conv5ROIFeatureExtractor(nn.Module):
@@ -76,8 +78,16 @@ class FPN2MLPFeatureExtractor(nn.Module):
 
         # xfjiang: save blobs
         import numpy as np
-        save_path = "./new_dump/box/batch_permutation_out" + "." + str(x.size())
+        save_path = "./new_dump/box/box_head_batch_permutation_out" + "." + str(x.size())
         np.save(save_path, x.detach().cpu().numpy())
+        if not os.path.exists("./grad_dump/box"):
+            os.makedirs("./grad_dump/box")
+        def fetch_box_head_batch_permutation_out_diff(grad):
+            grad_numpy = grad.detach().cpu().numpy().reshape(-1, 256, 7, 7)
+            save_path = './grad_dump/box/box_head_batch_permutation_out_diff' + '.' + str(grad_numpy.shape)
+            np.save(save_path, grad_numpy)
+            return
+        x.register_hook(fetch_box_head_batch_permutation_out_diff)
 
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))

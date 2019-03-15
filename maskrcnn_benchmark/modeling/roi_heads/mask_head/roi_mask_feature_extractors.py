@@ -6,6 +6,8 @@ from ..box_head.roi_box_feature_extractors import ResNet50Conv5ROIFeatureExtract
 from maskrcnn_benchmark.modeling.poolers import Pooler
 from maskrcnn_benchmark.layers import Conv2d
 
+import os
+import numpy as np
 
 class MaskRCNNFPNFeatureExtractor(nn.Module):
     """
@@ -49,6 +51,18 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
 
     def forward(self, x, proposals):
         x = self.pooler(x, proposals)
+
+        # xfjiang: save blobs
+        import numpy as np
+        save_path = "./new_dump/mask/mask_head_batch_permutation_out" + "." + str(x.size())
+        np.save(save_path, x.detach().cpu().numpy())
+        if not os.path.exists("./grad_dump/mask"):
+            os.makedirs("./grad_dump/mask")
+        def fetch_mask_head_batch_permutation_out_diff(grad):
+            save_path = './grad_dump/mask/mask_head_batch_permutation_out_diff' + '.' + str(grad.size())
+            np.save(save_path, grad.detach().cpu().numpy())
+            return
+        x.register_hook(fetch_mask_head_batch_permutation_out_diff)
 
         for layer_name in self.blocks:
             x = F.relu(getattr(self, layer_name)(x))
