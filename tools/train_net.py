@@ -53,6 +53,12 @@ def train(cfg, local_rank, distributed):
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
 
+    momentum_save_file = os.path.basename(cfg.MODEL.WEIGHT) + '.model_name_to_param_id.pkl'
+    with open(momentum_save_file, 'w') as f:
+        for key, value in model.named_parameters():
+            if value.requires_grad:
+                f.write('{:80s}{}\n'.format(key, id(value)))
+
     data_loader = make_data_loader(
         cfg,
         is_train=True,
