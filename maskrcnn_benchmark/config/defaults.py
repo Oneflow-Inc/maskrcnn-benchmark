@@ -82,6 +82,7 @@ _C.DATALOADER.ASPECT_RATIO_GROUPING = True
 
 # of compare test conf
 _C.DATALOADER.SEQUENTIAL_SAMPLE = False
+_C.DATALOADER.FAKE_IMAGE_DATA_PATH = ""
 
 # ---------------------------------------------------------------------------- #
 # Backbone options

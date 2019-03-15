@@ -62,10 +62,21 @@ def do_train(
     start_training_time = time.time()
     end = time.time()
     module2name = {}
+
+    save_dir = './new_dump'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
-        # xfjiang: replace images
-        oneflow_images = np.load('/dataset/mask_rcnn/sample_1_train_of_decoded_blobs/encoded_(1, 1280, 800, 3).npy')
-        images.tensors = torch.tensor(np.transpose(oneflow_images, (0, 3, 1, 2)))
+        if iteration == start_iter:
+            if arguments["fake_image"]:
+                fake_images = np.load(arguments["fake_image"])
+                fake_images = np.transpose(fake_images, (0, 3, 1, 2))
+                images.tensors = torch.tensor(fake_images)
+                logger.info("Load fake image data from {} at itor {}".format(arguments["fake_image"], iteration))
+            else:
+                first_images_save_path = save_dir + '/images' + '.' + str(images.tensors.size())
+                np.save(first_images_save_path, images.tensors.cpu().detach().numpy())
 
         data_time = time.time() - end
 

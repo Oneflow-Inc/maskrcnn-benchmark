@@ -61,6 +61,7 @@ def train(cfg, local_rank, distributed):
     )
 
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
+    arguments["fake_image"] = cfg.DATALOADER.FAKE_IMAGE_DATA_PATH
 
     do_train(
         model,

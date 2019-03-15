@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+import numpy
 import torch
 import torchvision
 
@@ -33,8 +35,15 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.transforms = transforms
         self.use_contiguous_category_id = use_contiguous_category_id
 
+        self.save_dir = './new_dump'
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
+
+        # numpy.save(self.save_dir + '/img' + '.' + str(img.size), numpy.asarray(img))
 
         # filter crowd annotations
         # TODO might be better to add an extra field
