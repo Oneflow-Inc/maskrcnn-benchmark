@@ -25,6 +25,7 @@ from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
+import pickle as pkl
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
@@ -52,12 +53,14 @@ def train(cfg, local_rank, distributed):
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
-
-    momentum_save_file = os.path.basename(cfg.MODEL.WEIGHT) + '.model_name_to_param_id.pkl'
-    with open(momentum_save_file, 'w') as f:
-        for key, value in model.named_parameters():
-            if value.requires_grad:
-                f.write('{:80s}{}\n'.format(key, id(value)))
+    
+    state_dict = optimizer.state_dict()
+    model_name2momentum_buffer = {}
+    for key, value in model.named_parameters():
+        if value.requires_grad:
+            momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+            model_name2momentum_buffer[key] = momentum_buffer
+    pkl.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
 
     data_loader = make_data_loader(
         cfg,
