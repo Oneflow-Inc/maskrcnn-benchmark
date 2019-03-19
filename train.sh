@@ -1,6 +1,7 @@
 rm -r ./dump
 rm -r ./new_dump
 rm -r ./grad_dump
+rm -r ./param_grad
 rm last_checkpoint
 rm model_final.pth
 rm log.txt

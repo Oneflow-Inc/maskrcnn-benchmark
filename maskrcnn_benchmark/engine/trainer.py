@@ -66,6 +66,115 @@ def do_train(
     save_dir = './new_dump'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+    if not os.path.exists('./param_grad/'):
+        os.makedirs('./param_grad/')
+    
+    # xfjiang: save param grad
+    # for key, value in model.named_parameters():
+    #     print(key)
+    # backbone.body.stem.conv1.weight
+    # backbone.body.layer1.0.downsample.0.weight
+    # backbone.body.layer1.0.conv1.weight
+    # backbone.body.layer1.0.conv2.weight
+    # backbone.body.layer1.0.conv3.weight
+    # backbone.body.layer1.1.conv1.weight
+    # backbone.body.layer1.1.conv2.weight
+    # backbone.body.layer1.1.conv3.weight
+    # backbone.body.layer1.2.conv1.weight
+    # backbone.body.layer1.2.conv2.weight
+    # backbone.body.layer1.2.conv3.weight
+    # backbone.body.layer2.0.downsample.0.weight
+    # backbone.body.layer2.0.conv1.weight
+    # backbone.body.layer2.0.conv2.weight
+    # backbone.body.layer2.0.conv3.weight
+    # backbone.body.layer2.1.conv1.weight
+    # backbone.body.layer2.1.conv2.weight
+    # backbone.body.layer2.1.conv3.weight
+    # backbone.body.layer2.2.conv1.weight
+    # backbone.body.layer2.2.conv2.weight
+    # backbone.body.layer2.2.conv3.weight
+    # backbone.body.layer2.3.conv1.weight
+    # backbone.body.layer2.3.conv2.weight
+    # backbone.body.layer2.3.conv3.weight
+    # backbone.body.layer3.0.downsample.0.weight
+    # backbone.body.layer3.0.conv1.weight
+    # backbone.body.layer3.0.conv2.weight
+    # backbone.body.layer3.0.conv3.weight
+    # backbone.body.layer3.1.conv1.weight
+    # backbone.body.layer3.1.conv2.weight
+    # backbone.body.layer3.1.conv3.weight
+    # backbone.body.layer3.2.conv1.weight
+    # backbone.body.layer3.2.conv2.weight
+    # backbone.body.layer3.2.conv3.weight
+    # backbone.body.layer3.3.conv1.weight
+    # backbone.body.layer3.3.conv2.weight
+    # backbone.body.layer3.3.conv3.weight
+    # backbone.body.layer3.4.conv1.weight
+    # backbone.body.layer3.4.conv2.weight
+    # backbone.body.layer3.4.conv3.weight
+    # backbone.body.layer3.5.conv1.weight
+    # backbone.body.layer3.5.conv2.weight
+    # backbone.body.layer3.5.conv3.weight
+    # backbone.body.layer4.0.downsample.0.weight
+    # backbone.body.layer4.0.conv1.weight
+    # backbone.body.layer4.0.conv2.weight
+    # backbone.body.layer4.0.conv3.weight
+    # backbone.body.layer4.1.conv1.weight
+    # backbone.body.layer4.1.conv2.weight
+    # backbone.body.layer4.1.conv3.weight
+    # backbone.body.layer4.2.conv1.weight
+    # backbone.body.layer4.2.conv2.weight
+    # backbone.body.layer4.2.conv3.weight
+    # backbone.fpn.fpn_inner1.weight
+    # backbone.fpn.fpn_inner1.bias
+    # backbone.fpn.fpn_layer1.weight
+    # backbone.fpn.fpn_layer1.bias
+    # backbone.fpn.fpn_inner2.weight
+    # backbone.fpn.fpn_inner2.bias
+    # backbone.fpn.fpn_layer2.weight
+    # backbone.fpn.fpn_layer2.bias
+    # backbone.fpn.fpn_inner3.weight
+    # backbone.fpn.fpn_inner3.bias
+    # backbone.fpn.fpn_layer3.weight
+    # backbone.fpn.fpn_layer3.bias
+    # backbone.fpn.fpn_inner4.weight
+    # backbone.fpn.fpn_inner4.bias
+    # backbone.fpn.fpn_layer4.weight
+    # backbone.fpn.fpn_layer4.bias
+    # rpn.head.conv.weight
+    # rpn.head.conv.bias
+    # rpn.head.cls_logits.weight
+    # rpn.head.cls_logits.bias
+    # rpn.head.bbox_pred.weight
+    # rpn.head.bbox_pred.bias
+    # roi_heads.box.feature_extractor.fc6.weight
+    # roi_heads.box.feature_extractor.fc6.bias
+    # roi_heads.box.feature_extractor.fc7.weight
+    # roi_heads.box.feature_extractor.fc7.bias
+    # roi_heads.box.predictor.cls_score.weight
+    # roi_heads.box.predictor.cls_score.bias
+    # roi_heads.box.predictor.bbox_pred.weight
+    # roi_heads.box.predictor.bbox_pred.bias
+    # roi_heads.mask.feature_extractor.mask_fcn1.weight
+    # roi_heads.mask.feature_extractor.mask_fcn1.bias
+    # roi_heads.mask.feature_extractor.mask_fcn2.weight
+    # roi_heads.mask.feature_extractor.mask_fcn2.bias
+    # roi_heads.mask.feature_extractor.mask_fcn3.weight
+    # roi_heads.mask.feature_extractor.mask_fcn3.bias
+    # roi_heads.mask.feature_extractor.mask_fcn4.weight
+    # roi_heads.mask.feature_extractor.mask_fcn4.bias
+    # roi_heads.mask.predictor.conv5_mask.weight
+    # roi_heads.mask.predictor.conv5_mask.bias
+    # roi_heads.mask.predictor.mask_fcn_logits.weight
+    # roi_heads.mask.predictor.mask_fcn_logits.bias
+    def fetch_param_grad(grad):
+        save_path = './param_grad/mask_fcn_logits_weight_param_diff' + '.' + str(grad.size())
+        np.save(save_path, grad.detach().cpu().numpy())
+        return
+    for key, value in model.named_parameters():
+        if value.requires_grad and key == 'roi_heads.mask.predictor.mask_fcn_logits.weight':
+            value.register_hook(fetch_param_grad)
+
 
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
         if iteration == start_iter:
