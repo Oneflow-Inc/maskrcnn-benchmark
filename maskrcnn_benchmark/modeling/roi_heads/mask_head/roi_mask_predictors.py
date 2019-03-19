@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import numpy
 from torch import nn
 from torch.nn import functional as F
 
@@ -32,7 +33,18 @@ class MaskRCNNC4Predictor(nn.Module):
                 nn.init.kaiming_normal_(param, mode="fan_out", nonlinearity="relu")
 
     def forward(self, x):
+        mask_conv5_in_dump_path = './new_dump/mask/conv5_in' + '.' + str(x.size())
+        numpy.save(mask_conv5_in_dump_path, x.cpu().detach().numpy())
+        mask_conv5_in_grad_dump_path = './new_dump/mask/conv5_in_grad' + '.' + str(x.size())
+        x.register_hook(lambda grad : numpy.save(mask_conv5_in_grad_dump_path, grad.cpu().detach().numpy()))
+
         x = F.relu(self.conv5_mask(x))
+
+        mask_conv5_out_dump_path = './new_dump/mask/conv5_out' + '.' + str(x.size())
+        numpy.save(mask_conv5_out_dump_path, x.cpu().detach().numpy())
+        mask_conv5_out_grad_dump_path = './new_dump/mask/conv5_out_grad' + '.' + str(x.size())
+        x.register_hook(lambda grad : numpy.save(mask_conv5_out_grad_dump_path, grad.cpu().detach().numpy()))
+
         return self.mask_fcn_logits(x)
 
 

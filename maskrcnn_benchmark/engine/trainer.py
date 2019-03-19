@@ -151,8 +151,8 @@ def register_param_grad_hook(model):
         np.save(param_grad_dump_path, param_grad.detach().cpu().numpy())
 
     def get_dump_path(param_name):
-        param_grad_name = param_name.replace('.weight', '.weight_diff')
-        param_grad_name = param_name.replace('.bias', '.bias_diff')
+        param_grad_name = param_name.replace('.weight', '.weight_grad')
+        param_grad_name = param_name.replace('.bias', '.bias_grad')
         param_grad_name = param_grad_name.replace('.', '-')
         return os.path.join(param_grad_dump_dir, param_grad_name)
 
