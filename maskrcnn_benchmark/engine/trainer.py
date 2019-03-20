@@ -18,6 +18,8 @@ import os
 
 from functools import partial
 
+import pickle as pkl
+
 def reduce_loss_dict(loss_dict):
     """
     Reduce the loss dictionary from all processes so that process with rank
@@ -44,6 +46,7 @@ def reduce_loss_dict(loss_dict):
 
 
 def do_train(
+    cfg,
     model,
     data_loader,
     optimizer,
@@ -103,6 +106,17 @@ def do_train(
         losses.backward()
         optimizer.step()
 
+        if not os.path.exists("model_name2momentum_buffer/"):
+            os.makedirs("model_name2momentum_buffer/")
+        state_dict = optimizer.state_dict()
+        model_name2momentum_buffer = {}
+        for key, value in model.named_parameters():
+            if value.requires_grad:
+                momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+                model_name2momentum_buffer[key] = momentum_buffer
+        pkl.dump(model_name2momentum_buffer, open("model_name2momentum_buffer/" + os.path.basename(cfg.MODEL.WEIGHT) \
+            + "-iteration-" + str(iteration) +'-model_name2momentum_buffer.pkl', 'w'))
+
         batch_time = time.time() - end
         end = time.time()
         meters.update(time=batch_time, data=data_time)
@@ -110,7 +124,7 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % 20 == 0 or iteration == max_iter:
+        if iteration % 1 == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join(
                     [

@@ -25,8 +25,6 @@ from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
-import pickle as pkl
-
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
     device = torch.device(cfg.MODEL.DEVICE)
@@ -53,14 +51,6 @@ def train(cfg, local_rank, distributed):
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
-    
-    state_dict = optimizer.state_dict()
-    model_name2momentum_buffer = {}
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
-            model_name2momentum_buffer[key] = momentum_buffer
-    pkl.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
 
     data_loader = make_data_loader(
         cfg,
@@ -73,6 +63,7 @@ def train(cfg, local_rank, distributed):
     arguments["fake_image"] = cfg.DATALOADER.FAKE_IMAGE_DATA_PATH
 
     do_train(
+        cfg,
         model,
         data_loader,
         optimizer,
