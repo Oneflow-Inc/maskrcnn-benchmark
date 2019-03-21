@@ -12,9 +12,12 @@ import maskrcnn_benchmark
 from maskrcnn_benchmark.utils.comm import get_world_size
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 from maskrcnn_benchmark.structures.bounding_box import BoxList
+from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
-import numpy as np
+import numpy
 import os
+import pickle
 
 from functools import partial
 
@@ -61,31 +64,26 @@ def do_train(
     model.train()
     start_training_time = time.time()
     end = time.time()
-    module2name = {}
 
-    save_dir = './new_dump'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
+    create_tensor_saver('fwbw_tensor_dump', start_iter)
     register_param_grad_hook(model)
 
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
-        if iteration == start_iter:
-            if arguments["fake_image"]:
-                fake_images = np.load(arguments["fake_image"])
-                fake_images = np.transpose(fake_images, (0, 3, 1, 2))
-                images.tensors = torch.tensor(fake_images)
-                logger.info("Load fake image data from {} at itor {}".format(arguments["fake_image"], iteration))
-            else:
-                first_images_save_path = save_dir + '/images' + '.' + str(images.tensors.size())
-                np.save(first_images_save_path, images.tensors.cpu().detach().numpy())
-
         data_time = time.time() - end
 
         iteration = iteration + 1
         arguments["iteration"] = iteration
+        get_tensor_saver().step()
 
         scheduler.step()
+
+        if arguments["fake_image"]:
+            fake_images = numpy.load(arguments["fake_image"])
+            fake_images = numpy.transpose(fake_images, (0, 3, 1, 2))
+            images.tensors = torch.tensor(fake_images)
+            logger.info("Load fake image data from {} at itor {}".format(arguments["fake_image"], iteration))
+        else:
+            get_tensor_saver().save(images, 'images')
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
@@ -110,7 +108,7 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % 20 == 0 or iteration == max_iter:
+        if iteration % arguments['metrics_period'] == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join(
                     [
@@ -133,6 +131,14 @@ def do_train(
         if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
 
+            state_dict = optimizer.state_dict()
+            model_name2momentum_buffer = {}
+            for key, value in model.named_parameters():
+                if value.requires_grad:
+                    momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+                    model_name2momentum_buffer[key] = momentum_buffer
+            pickle.dump(model_name2momentum_buffer, open('model_final' + '.model_name2momentum_buffer.pkl', 'w'))
+
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))
     logger.info(
@@ -148,7 +154,7 @@ def register_param_grad_hook(model):
 
     def dump_param_grad(dump_path, param_grad):
         param_grad_dump_path = dump_path + '.' + str(tuple(param_grad.size()))
-        np.save(param_grad_dump_path, param_grad.detach().cpu().numpy())
+        numpy.save(param_grad_dump_path, param_grad.detach().cpu().numpy())
 
     def get_dump_path(param_name):
         param_grad_name = param_name.replace('.weight', '.weight_grad')

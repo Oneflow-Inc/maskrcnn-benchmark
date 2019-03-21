@@ -2,6 +2,7 @@ rm -rf ./dump
 rm -rf ./new_dump
 rm -rf ./grad_dump
 rm -rf ./param_grad
+rm -rf ./fwbw_tensor_dump
 rm -f last_checkpoint
 rm -f model_final.pth
 rm -f log.txt

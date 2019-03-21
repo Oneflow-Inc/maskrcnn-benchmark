@@ -2,8 +2,6 @@
 """
 Implements the Generalized R-CNN framework
 """
-
-import numpy
 import torch
 from torch import nn
 
@@ -48,10 +46,6 @@ class GeneralizedRCNN(nn.Module):
             raise ValueError("In training mode, targets should be passed")
         images = to_image_list(images)
         features = self.backbone(images.tensors)
-
-        for i, feature in enumerate(features, 1):
-            fpn_save_path = "./new_dump/backbone/fpn_layer_{}".format(i) + "." + str(feature.size())
-            numpy.save(fpn_save_path, feature.cpu().detach().numpy())
 
         proposals, proposal_losses = self.rpn(images, features, targets)
         if self.roi_heads:

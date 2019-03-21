@@ -6,6 +6,8 @@ from torch import nn
 import os
 import numpy as np
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+
 class FPN(nn.Module):
     """
     Module that adds FPN on top of a list of feature maps.
@@ -68,44 +70,9 @@ class FPN(nn.Module):
             last_results = self.top_blocks(results[-1])
             results.extend(last_results)
 
-        # xfjiang: save blobs
-        if not os.path.exists('./grad_dump/backbone'):
-            os.makedirs('./grad_dump/backbone')
-        def fetch_fpn_layer_1_out_diff(grad):
-            save_path = './grad_dump/backbone/fpn_layer_1_out_diff' + '.' + str(grad.size())
-            np.save(save_path, grad.detach().cpu().numpy())
-            return
-        def fetch_fpn_layer_2_out_diff(grad):
-            save_path = './grad_dump/backbone/fpn_layer_2_out_diff' + '.' + str(grad.size())
-            np.save(save_path, grad.detach().cpu().numpy())
-            return
-        def fetch_fpn_layer_3_out_diff(grad):
-            save_path = './grad_dump/backbone/fpn_layer_3_out_diff' + '.' + str(grad.size())
-            np.save(save_path, grad.detach().cpu().numpy())
-            return
-        def fetch_fpn_layer_4_out_diff(grad):
-            save_path = './grad_dump/backbone/fpn_layer_4_out_diff' + '.' + str(grad.size())
-            np.save(save_path, grad.detach().cpu().numpy())
-            return
-        def fetch_fpn_layer_5_out_diff(grad):
-            save_path = './grad_dump/backbone/fpn_layer_5_out_diff' + '.' + str(grad.size())
-            np.save(save_path, grad.detach().cpu().numpy())
-            return
-        for idx, x in enumerate(results):
-            idx = idx + 1
-            if idx == 1:
-                x.register_hook(fetch_fpn_layer_1_out_diff)
-            elif idx == 2:
-                x.register_hook(fetch_fpn_layer_2_out_diff)
-            elif idx == 3:
-                x.register_hook(fetch_fpn_layer_3_out_diff)
-            elif idx == 4:
-                x.register_hook(fetch_fpn_layer_4_out_diff)
-            elif idx == 5:
-                x.register_hook(fetch_fpn_layer_5_out_diff)
-            else:
-                assert False
-                
+        for i, feature in enumerate(results, 1):
+            get_tensor_saver().save(feature, 'fpn_layer_{}'.format(i), 'backbone', True)
+
         return tuple(results)
 
 
