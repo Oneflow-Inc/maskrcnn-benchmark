@@ -8,6 +8,7 @@ rm -f model_final.pth
 rm -f log.txt
 rm -f model_0090000.pth
 rm -f e2e_mask_rcnn_R_50_FPN_1x.pth.model_name2momentum_buffer.pkl
+rm -rf model_name2momentum_buffer
 
 CUDA_VISIBLE_DEVICES=1                                                          \
 python ./tools/train_net.py                                                     \

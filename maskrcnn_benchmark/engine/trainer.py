@@ -21,6 +21,8 @@ import pickle
 
 from functools import partial
 
+import pickle as pkl
+
 def reduce_loss_dict(loss_dict):
     """
     Reduce the loss dictionary from all processes so that process with rank
@@ -47,6 +49,7 @@ def reduce_loss_dict(loss_dict):
 
 
 def do_train(
+    cfg,
     model,
     data_loader,
     optimizer,
@@ -100,6 +103,17 @@ def do_train(
         optimizer.zero_grad()
         losses.backward()
         optimizer.step()
+
+        if not os.path.exists("model_name2momentum_buffer/"):
+            os.makedirs("model_name2momentum_buffer/")
+        state_dict = optimizer.state_dict()
+        model_name2momentum_buffer = {}
+        for key, value in model.named_parameters():
+            if value.requires_grad:
+                momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+                model_name2momentum_buffer[key] = momentum_buffer
+        pkl.dump(model_name2momentum_buffer, open("model_name2momentum_buffer/" + os.path.basename(cfg.MODEL.WEIGHT) \
+            + "-iteration-" + str(iteration) +'-model_name2momentum_buffer.pkl', 'w'))
 
         batch_time = time.time() - end
         end = time.time()

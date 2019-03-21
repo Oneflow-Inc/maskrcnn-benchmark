@@ -9,6 +9,7 @@ from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:sk
 
 import argparse
 import os
+import pickle
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -24,8 +25,6 @@ from maskrcnn_benchmark.utils.comm import synchronize, get_rank
 from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
-
-import pickle as pkl
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
@@ -53,14 +52,14 @@ def train(cfg, local_rank, distributed):
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
-    
+
     state_dict = optimizer.state_dict()
     model_name2momentum_buffer = {}
     for key, value in model.named_parameters():
         if value.requires_grad:
             momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
             model_name2momentum_buffer[key] = momentum_buffer
-    pkl.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
+    pickle.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
 
     data_loader = make_data_loader(
         cfg,
@@ -74,6 +73,7 @@ def train(cfg, local_rank, distributed):
     arguments['metrics_period'] = cfg.METRICS_PERIOD
 
     do_train(
+        cfg,
         model,
         data_loader,
         optimizer,
