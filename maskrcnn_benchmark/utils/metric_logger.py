@@ -10,7 +10,7 @@ class SmoothedValue(object):
     window or the global series average.
     """
 
-    def __init__(self, window_size=20):
+    def __init__(self, window_size=1):
         self.deque = deque(maxlen=window_size)
         self.series = []
         self.total = 0.0
@@ -61,6 +61,6 @@ class MetricLogger(object):
         loss_str = []
         for name, meter in self.meters.items():
             loss_str.append(
-                "{}: {:.4f} ({:.4f})".format(name, meter.median, meter.global_avg)
+                "{}: {:.4f} ({:.4f})".format(name, meter.median, meter.avg)
             )
         return self.delimiter.join(loss_str)
