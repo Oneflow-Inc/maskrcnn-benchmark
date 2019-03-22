@@ -1,10 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-import numpy
 import torch
 
 from .bounding_box import BoxList
 
 from maskrcnn_benchmark.layers import nms as _box_nms
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
 def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="score", im_idx=0, level=0):
@@ -28,9 +28,8 @@ def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="score", im_i
     keep = _box_nms(boxes, score, nms_thresh)
     if max_proposals > 0:
         keep = keep[: max_proposals]
-    
-    nms_keep_inds_save_path = './new_dump/proposal/nms_keep_inds_{}_{}'.format(im_idx, level) + '.' + '({},{})'.format(*boxlist.size)
-    numpy.save(nms_keep_inds_save_path, keep.detach().cpu().numpy())
+
+    get_tensor_saver().save(keep, 'nms_keep_inds', 'rpn', level=level, im_idx=im_idx)
 
     boxlist = boxlist[keep]
     return boxlist.convert(mode)

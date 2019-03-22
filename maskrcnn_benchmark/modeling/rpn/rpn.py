@@ -5,12 +5,12 @@ from torch import nn
 
 from maskrcnn_benchmark.modeling import registry
 from maskrcnn_benchmark.modeling.box_coder import BoxCoder
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+
 from .loss import make_rpn_loss_evaluator
 from .anchor_generator import make_anchor_generator
 from .inference import make_rpn_postprocessor
 
-import numpy as np
-import os
 
 @registry.RPN_HEADS.register("SingleConvRPNHead")
 class RPNHead(nn.Module):
@@ -45,6 +45,11 @@ class RPNHead(nn.Module):
             t = F.relu(self.conv(feature))
             logits.append(self.cls_logits(t))
             bbox_reg.append(self.bbox_pred(t))
+
+        for i, (logits_per_layer, bbox_reg_per_layer) in enumerate(zip(logits, bbox_reg), 1):
+            get_tensor_saver().save(logits_per_layer, 'rpn_head_cls_logits', 'rpn', True, i)
+            get_tensor_saver().save(bbox_reg_per_layer, 'rpn_head_bbox_reg', 'rpn', True, i)
+
         return logits, bbox_reg
 
 
@@ -98,6 +103,10 @@ class RPNModule(torch.nn.Module):
         objectness, rpn_box_regression = self.head(features)
         anchors = self.anchor_generator(images, features)
 
+        for i, anchors_per_image in enumerate(anchors):
+            for l, anchors_per_layer in enumerate(anchors_per_image, 1):
+                get_tensor_saver().save(anchors_per_layer.bbox, 'anchors', 'rpn', level=l, im_idx=i)
+
         if self.training:
             return self._forward_train(anchors, objectness, rpn_box_regression, targets)
         else:
@@ -118,20 +127,18 @@ class RPNModule(torch.nn.Module):
                     anchors, objectness, rpn_box_regression, targets
                 )
 
-        for i, box_list in enumerate(boxes):
-            bbox = box_list.bbox
-            bbox_save_path = "./new_dump/proposal/{}_out_rois".format(i) + "." + str(bbox.size())
-            np.save(bbox_save_path, bbox.detach().cpu().numpy())
-
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
         )
 
+        for i, boxes_per_im in enumerate(boxes):
+            get_tensor_saver().save(boxes_per_im.bbox, 'rois', 'rpn', im_idx=i)
+
         # xfjiang: save blobs
-        loss_objectness_save_path = "./new_dump/rpn/" + "rpn_objectiness_loss" + "." + str(loss_objectness.size())
-        loss_rpn_box_reg_save_path = "./new_dump/rpn/" + "rpn_box_loss" + "." + str(loss_objectness.size())
-        np.save(loss_objectness_save_path ,loss_objectness.detach().cpu().numpy())
-        np.save(loss_rpn_box_reg_save_path, loss_rpn_box_reg.detach().cpu().numpy())
+        # loss_objectness_save_path = "./new_dump/rpn/" + "rpn_objectiness_loss" + "." + str(loss_objectness.size())
+        # loss_rpn_box_reg_save_path = "./new_dump/rpn/" + "rpn_box_loss" + "." + str(loss_objectness.size())
+        # np.save(loss_objectness_save_path ,loss_objectness.detach().cpu().numpy())
+        # np.save(loss_rpn_box_reg_save_path, loss_rpn_box_reg.detach().cpu().numpy())
 
         losses = {
             "loss_objectness": loss_objectness,

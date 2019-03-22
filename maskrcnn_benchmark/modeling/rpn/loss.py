@@ -4,7 +4,6 @@ This file contains specific functions for computing losses on the RPN
 file
 """
 
-import os
 import torch
 from torch.nn import functional as F
 
@@ -16,7 +15,6 @@ from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 
-import numpy as np
 
 class RPNLossComputation(object):
     """
@@ -117,12 +115,6 @@ class RPNLossComputation(object):
 
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
 
-        # xfjiang: save blobs
-        if not os.path.exists("./new_dump/rpn/"):
-            os.makedirs("./new_dump/rpn/")
-        generated_anchors_save_path = "./new_dump/rpn/generated_anchors" + "." + str(anchors[0].bbox.size())
-        np.save(generated_anchors_save_path, anchors[0].bbox.detach().cpu().numpy())
-
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
         sampled_pos_inds = torch.nonzero(torch.cat(sampled_pos_inds, dim=0)).squeeze(1)
@@ -136,7 +128,6 @@ class RPNLossComputation(object):
         # same format as the labels. Note that the labels are computed for
         # all feature levels concatenated, so we keep the same representation
         # for the objectness and the box_regression
-        level = 1
         for objectness_per_level, box_regression_per_level in zip(
             objectness, box_regression
         ):
@@ -149,10 +140,7 @@ class RPNLossComputation(object):
             box_regression_per_level = box_regression_per_level.reshape(N, -1, 4)
             objectness_flattened.append(objectness_per_level)
             box_regression_flattened.append(box_regression_per_level)
-            
-            level_objectness_save_path = "./new_dump/rpn/objectness_{}".format(level) + "." + str(objectness_per_level.shape)
-            np.save(level_objectness_save_path, objectness_per_level.cpu().detach().numpy())
-            level += 1
+
         # concatenate on the first dimension (representing the feature levels), to
         # take into account the way the labels were generated (with all feature maps
         # being concatenated as well)
@@ -162,24 +150,6 @@ class RPNLossComputation(object):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
-        # xfjiang: save blobs
-        sampled_objectness_npy = objectness[sampled_inds].cpu().detach().numpy()
-        sampled_objectness_save_path = "./new_dump/rpn/sampled_objectness" + "." + str(sampled_objectness_npy.shape)
-        np.save(sampled_objectness_save_path, sampled_objectness_npy)
-        sampled_labels_npy = labels[sampled_inds].cpu().detach().numpy()
-        sampled_labels_save_path = "./new_dump/rpn/sampled_labels" + "." + str(sampled_labels_npy.shape)
-        np.save(sampled_labels_save_path, sampled_labels_npy)
-        sampled_box_regression_npy = box_regression[sampled_pos_inds].cpu().detach().numpy()
-        sampled_box_regression_save_path = "./new_dump/rpn/sampled_box_regression" + "." + str(sampled_box_regression_npy.shape)
-        np.save(sampled_box_regression_save_path, sampled_box_regression_npy)
-        sampled_regression_targets_npy = regression_targets[sampled_pos_inds].cpu().detach().numpy()
-        sampled_regression_targets_save_path = "./new_dump/rpn/sampled_regression_targets" + "." + str(sampled_regression_targets_npy.shape)
-        np.save(sampled_regression_targets_save_path, sampled_regression_targets_npy)
-        sampled_pos_inds_save_path = "./new_dump/rpn/sampled_pos_inds" + "." + str(sampled_pos_inds.size())
-        np.save(sampled_pos_inds_save_path, sampled_pos_inds.cpu().detach().numpy())
-        sampled_inds_save_path = "./new_dump/rpn/sampled_inds" + "." + str(sampled_inds.size())
-        np.save(sampled_inds_save_path, sampled_inds.cpu().detach().numpy())
-
         box_loss = smooth_l1_loss(
             box_regression[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
@@ -187,15 +157,9 @@ class RPNLossComputation(object):
             size_average=False,
         ) / (sampled_inds.numel())
 
-        box_loss_save_path = "./new_dump/rpn/box_loss" + "." + str(box_loss.size())
-        np.save(box_loss_save_path, box_loss.cpu().detach().numpy())
-
         objectness_loss = F.binary_cross_entropy_with_logits(
             objectness[sampled_inds], labels[sampled_inds]
         )
-
-        objectness_loss_save_path = "./new_dump/rpn/objectness_loss" + "." + str(objectness_loss.size())
-        np.save(objectness_loss_save_path, objectness_loss.cpu().detach().numpy())
 
         return objectness_loss, box_loss
 

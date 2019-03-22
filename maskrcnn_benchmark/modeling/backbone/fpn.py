@@ -71,7 +71,7 @@ class FPN(nn.Module):
             results.extend(last_results)
 
         for i, feature in enumerate(results, 1):
-            get_tensor_saver().save(feature, 'fpn_layer_{}'.format(i), 'backbone', True)
+            get_tensor_saver().save(feature, 'fpn_feature'.format(i), 'backbone', True, i)
 
         return tuple(results)
 

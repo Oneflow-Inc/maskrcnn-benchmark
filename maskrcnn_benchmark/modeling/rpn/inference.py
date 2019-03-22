@@ -1,6 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-import os
-import numpy
 import torch
 
 from maskrcnn_benchmark.modeling.box_coder import BoxCoder
@@ -8,6 +6,7 @@ from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_nms
 from maskrcnn_benchmark.structures.boxlist_ops import remove_small_boxes
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 from ..utils import cat
 
@@ -80,19 +79,6 @@ class RPNPostProcessor(torch.nn.Module):
             objectness: tensor of size N, A, H, W
             box_regression: tensor of size N, A * 4, H, W
         """
-        # save tensor
-        proposal_save_dir = './new_dump/proposal'
-        if not os.path.exists(proposal_save_dir):
-            os.makedirs(proposal_save_dir)
-        for i, anchor in enumerate(anchors):
-            anchor_bbox = anchor.bbox
-            anchor_save_path = proposal_save_dir + '/{}_anchor'.format(i) + '.' + str(anchor_bbox.size())
-            numpy.save(anchor_save_path, anchor_bbox.detach().cpu().numpy())
-        objectness_save_path = proposal_save_dir + '/objectness' + '.' + str(objectness.size())
-        numpy.save(objectness_save_path, objectness.detach().cpu().numpy())
-        box_regression_save_path = proposal_save_dir + '/box_regression' + '.' + str(box_regression.size())
-        numpy.save(box_regression_save_path, box_regression.detach().cpu().numpy())
-
         device = objectness.device
         N, A, H, W = objectness.shape
 
@@ -107,9 +93,6 @@ class RPNPostProcessor(torch.nn.Module):
         pre_nms_top_n = min(self.pre_nms_top_n, num_anchors)
         objectness, topk_idx = objectness.topk(pre_nms_top_n, dim=1, sorted=True)
 
-        # save tensor
-        topk_idx_save_path = proposal_save_dir + '/topk_idx_{}'.format(level) + '.' + str(topk_idx.size())
-        numpy.save(topk_idx_save_path, topk_idx.detach().cpu().numpy())
 
         batch_idx = torch.arange(N, device=device)[:, None]
         box_regression = box_regression[batch_idx, topk_idx]
@@ -121,16 +104,10 @@ class RPNPostProcessor(torch.nn.Module):
         proposals = self.box_coder.decode(
             box_regression.view(-1, 4), concat_anchors.view(-1, 4)
         )
-
         proposals = proposals.view(N, -1, 4)
 
-        # save tensor
-        proposals_save_path = proposal_save_dir + '/proposals_{}'.format(level) + '.' + str(proposals.size())
-        numpy.save(proposals_save_path, proposals.detach().cpu().numpy())
-
         result = []
-        im_i = 0
-        for proposal, score, im_shape in zip(proposals, objectness, image_shapes):
+        for im_i, (proposal, score, im_shape) in enumerate(zip(proposals, objectness, image_shapes)):
             boxlist = BoxList(proposal, im_shape, mode="xyxy")
             boxlist.add_field("objectness", score)
             boxlist = boxlist.clip_to_image(remove_empty=False)
@@ -144,11 +121,7 @@ class RPNPostProcessor(torch.nn.Module):
                 level=level
             )
             result.append(boxlist)
-            # save tensor
-            selected_proposals_bbox = boxlist.bbox
-            selected_proposals_save_path = proposal_save_dir + '/{}_selected_proposals_{}'.format(im_i, level) + '.' + str(proposal.size())
-            numpy.save(selected_proposals_save_path, selected_proposals_bbox.detach().cpu().numpy())
-            im_i += 1
+            get_tensor_saver().save(boxlist.bbox, 'proposals', 'rpn', level=level, im_idx=im_i)
 
         return result
 
@@ -166,23 +139,15 @@ class RPNPostProcessor(torch.nn.Module):
         sampled_boxes = []
         num_levels = len(objectness)
         anchors = list(zip(*anchors))
-        level = 1
-        for a, o, b in zip(anchors, objectness, box_regression):
+
+        for level, (a, o, b) in enumerate(zip(anchors, objectness, box_regression), 1):
             sampled_boxes.append(self.forward_for_single_feature_map(a, o, b, level))
-            level += 1
 
         boxlists = list(zip(*sampled_boxes))
         boxlists = [cat_boxlist(boxlist) for boxlist in boxlists]
 
         if num_levels > 1:
             boxlists = self.select_over_all_levels(boxlists)
-
-        for i in range(len(boxlists)):
-            score = boxlists[i].get_field("objectness")
-            score_sorted, score_inds_sorted = torch.sort(score, descending=True)
-            bbox_sorted = boxlists[i].bbox[score_inds_sorted]
-            save_path = './new_dump/proposal/{}_proposal_collected'.format(i)
-            numpy.save(save_path, bbox_sorted.detach().cpu().numpy())
 
         # append ground-truth bboxes to proposals
         if self.training and targets is not None:
