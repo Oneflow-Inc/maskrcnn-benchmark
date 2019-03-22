@@ -14,6 +14,14 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         use_contiguous_category_id=True
     ):
         super(COCODataset, self).__init__(root, ann_file)
+
+        # remove Imgs with category_id > 81
+        to_remove = set([])
+        for cat_id, _ in self.coco.cats.items():
+            if cat_id > 81:
+                to_remove |= set(self.coco.catToImgs[cat_id])
+        self.ids = list(set(self.ids) - to_remove)
+
         # sort indices for reproducible results
         self.ids = sorted(self.ids)
 

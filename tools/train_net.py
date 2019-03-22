@@ -53,13 +53,13 @@ def train(cfg, local_rank, distributed):
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
 
-    state_dict = optimizer.state_dict()
-    model_name2momentum_buffer = {}
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
-            model_name2momentum_buffer[key] = momentum_buffer
-    pickle.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
+    # state_dict = optimizer.state_dict()
+    # model_name2momentum_buffer = {}
+    # for key, value in model.named_parameters():
+    #     if value.requires_grad:
+    #         momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+    #         model_name2momentum_buffer[key] = momentum_buffer
+    # pickle.dump(model_name2momentum_buffer, open(os.path.basename(cfg.MODEL.WEIGHT) + '.model_name2momentum_buffer.pkl', 'w'))
 
     data_loader = make_data_loader(
         cfg,

@@ -3,10 +3,11 @@ DATALOADER:
   NUM_WORKERS: 4
   SIZE_DIVISIBILITY: 32
   SEQUENTIAL_SAMPLE: True
-  FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/sample_1_train_of_decoded_blobs/encoded_(1, 1280, 800, 3).npy
+  # FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/sample_1_train_of_decoded_blobs/encoded_(1, 1280, 800, 3).npy
 DATASETS:
-  TEST: ('coco_1_image_train',)
-  TRAIN: ('coco_1_image_train', 'coco_1_image_train')
+  TEST: ('coco_2017_val',)
+  TRAIN: ('coco_2017_train',)
+  # TRAIN: ('coco_1_image_train', 'coco_1_image_train')
   # TRAIN: ('coco_1_image_val', 'coco_1_image_val')
   USE_CONTIGUOUS_CATEGORY_ID: False
 INPUT:
@@ -87,8 +88,8 @@ MODEL:
     USE_FPN: True
     RANDOM_SAMPLE: False
   RPN_ONLY: False
-  # WEIGHT: catalog://ImageNetPretrained/MSRA/R-50
-  WEIGHT: /model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth
+  WEIGHT: catalog://ImageNetPretrained/MSRA/R-50
+  # WEIGHT: /model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth
 OUTPUT_DIR: .
 SOLVER:
   BASE_LR: 0.02
