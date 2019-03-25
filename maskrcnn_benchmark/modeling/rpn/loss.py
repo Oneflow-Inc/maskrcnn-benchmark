@@ -14,6 +14,7 @@ from maskrcnn_benchmark.layers import smooth_l1_loss
 from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
 class RPNLossComputation(object):
@@ -117,6 +118,15 @@ class RPNLossComputation(object):
 
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
+
+        for i, (labels_per_im, regression_targets_per_im) in enumerate(zip(labels, regression_targets)):
+            get_tensor_saver().save(labels_per_im, 'class_labels', 'rpn', im_idx=i)
+            get_tensor_saver().save(regression_targets_per_im, 'regression_targets', 'rpn', im_idx=i)
+
+        for i, (sampled_pos_inds_per_im, sampled_neg_inds_per_im) in enumerate(zip(sampled_pos_inds, sampled_neg_inds)):
+            get_tensor_saver().save(sampled_pos_inds_per_im, 'sampled_pos_inds', 'rpn', im_idx=i)
+            get_tensor_saver().save(sampled_neg_inds_per_im, 'sampled_neg_inds', 'rpn', im_idx=i)
+
         sampled_pos_inds = torch.nonzero(torch.cat(sampled_pos_inds, dim=0)).squeeze(1)
         sampled_neg_inds = torch.nonzero(torch.cat(sampled_neg_inds, dim=0)).squeeze(1)
 
@@ -150,12 +160,17 @@ class RPNLossComputation(object):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
+        get_tensor_saver().save(box_regression, 'box_regression', 'rpn')
+        get_tensor_saver().save(regression_targets, 'regression_targets', 'rpn')
+
         box_loss = smooth_l1_loss(
             box_regression[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
             beta=1.0 / 9,
             size_average=False,
         ) / (sampled_inds.numel())
+
+        get_tensor_saver().save(box_loss, 'rpn_bbox_reg_loss', 'rpn')
 
         objectness_loss = F.binary_cross_entropy_with_logits(
             objectness[sampled_inds], labels[sampled_inds]

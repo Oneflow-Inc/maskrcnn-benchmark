@@ -6,9 +6,13 @@ class TensorSaver(object):
     '''
     '''
 
-    def __init__(self, base_dir, iteration):
+    def __init__(self, base_dir, iteration, max_iter):
         self.base_dir = base_dir
         self.iteration = iteration
+        if max_iter:
+            self.max_iteration = max_iter
+        else:
+            self.max_iteration = 0
 
     def step(self, iteration=None):
         if iteration:
@@ -17,6 +21,8 @@ class TensorSaver(object):
             self.iteration += 1
 
     def save(self, tensor, tensor_name, scope=None, save_grad=False, level=None, im_idx=None):
+        if self.iteration > self.max_iteration: return
+
         save_dir = os.path.join(self.base_dir, 'iter_{}'.format(self.iteration))
         if scope:
             save_dir = os.path.join(save_dir, scope)
@@ -41,9 +47,9 @@ class TensorSaver(object):
 
 tensor_saver = None
 
-def create_tensor_saver(base_dir, iteration=0):
+def create_tensor_saver(base_dir, iteration=0, max_iter=None):
     global tensor_saver 
-    tensor_saver = TensorSaver(base_dir, iteration)
+    tensor_saver = TensorSaver(base_dir, iteration, max_iter)
 
 def get_tensor_saver():
     global tensor_saver

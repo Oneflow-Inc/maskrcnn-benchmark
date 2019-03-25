@@ -68,7 +68,7 @@ def do_train(
     start_training_time = time.time()
     end = time.time()
 
-    create_tensor_saver('fwbw_tensor_dump', start_iter)
+    create_tensor_saver('fwbw_tensor_dump', start_iter, start_iter + 3)
     register_param_grad_hook(model)
 
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
@@ -104,16 +104,16 @@ def do_train(
         losses.backward()
         optimizer.step()
 
-        if not os.path.exists("model_name2momentum_buffer/"):
-            os.makedirs("model_name2momentum_buffer/")
-        state_dict = optimizer.state_dict()
-        model_name2momentum_buffer = {}
-        for key, value in model.named_parameters():
-            if value.requires_grad:
-                momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
-                model_name2momentum_buffer[key] = momentum_buffer
-        pkl.dump(model_name2momentum_buffer, open("model_name2momentum_buffer/" + os.path.basename(cfg.MODEL.WEIGHT) \
-            + "-iteration-" + str(iteration) +'-model_name2momentum_buffer.pkl', 'w'))
+        # if not os.path.exists("model_name2momentum_buffer/"):
+        #     os.makedirs("model_name2momentum_buffer/")
+        # state_dict = optimizer.state_dict()
+        # model_name2momentum_buffer = {}
+        # for key, value in model.named_parameters():
+        #     if value.requires_grad:
+        #         momentum_buffer = state_dict['state'][id(value)]['momentum_buffer'].cpu().detach().numpy()
+        #         model_name2momentum_buffer[key] = momentum_buffer
+        # pkl.dump(model_name2momentum_buffer, open("model_name2momentum_buffer/" + os.path.basename(cfg.MODEL.WEIGHT) \
+        #     + "-iteration-" + str(iteration) +'-model_name2momentum_buffer.pkl', 'w'))
 
         batch_time = time.time() - end
         end = time.time()
