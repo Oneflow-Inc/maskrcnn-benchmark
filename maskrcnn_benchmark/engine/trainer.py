@@ -80,11 +80,12 @@ def do_train(
 
         scheduler.step()
 
-        if arguments["fake_image"]:
-            fake_images = numpy.load(arguments["fake_image"])
+        if os.path.exists(cfg.DATALOADER.FAKE_IMAGE_DATA_PATH):
+            fake_image_path = os.path.join(cfg.DATALOADER.FAKE_IMAGE_DATA_PATH, 'image_{}.npy'.format(iteration))
+            fake_images = numpy.load(fake_image_path)
             fake_images = numpy.transpose(fake_images, (0, 3, 1, 2))
             images.tensors = torch.tensor(fake_images)
-            logger.info("Load fake image data from {} at itor {}".format(arguments["fake_image"], iteration))
+            logger.info("Load fake image data from {} at itor {}".format(fake_image_path, iteration))
         else:
             get_tensor_saver().save(images.tensors, 'images')
 
