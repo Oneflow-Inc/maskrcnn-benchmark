@@ -46,6 +46,10 @@ def do_coco_evaluation(
         logger.info("Preparing segm results")
         coco_results["segm"] = prepare_for_coco_segmentation(predictions, dataset)
 
+    import numpy as np
+    np.save(os.path.join(output_folder, "coco_results_bbox.npy"), coco_results["bbox"])
+    np.save(os.path.join(output_folder, "coco_results_segm.npy"), coco_results["segm"])
+
     results = COCOResults(*iou_types)
     logger.info("Evaluating predictions")
     for iou_type in iou_types:
