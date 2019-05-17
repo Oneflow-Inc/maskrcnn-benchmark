@@ -10,6 +10,7 @@ from .loss import make_rpn_loss_evaluator
 from .anchor_generator import make_anchor_generator
 from .inference import make_rpn_postprocessor
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 class RPNHeadConvRegressor(nn.Module):
     """
@@ -153,7 +154,16 @@ class RPNModule(torch.nn.Module):
                 testing, it is an empty dict.
         """
         objectness, rpn_box_regression = self.head(features)
+
+        for i, (logits_per_layer, bbox_reg_per_layer) in enumerate(zip(objectness, rpn_box_regression), 1):
+            get_tensor_saver().save(logits_per_layer, 'rpn_head_cls_logits', 'rpn/head', True, i)
+            get_tensor_saver().save(bbox_reg_per_layer, 'rpn_head_bbox_reg', 'rpn/head', True, i)
+
         anchors = self.anchor_generator(images, features)
+
+        for i, anchors_per_image in enumerate(anchors):
+            for l, anchors_per_layer in enumerate(anchors_per_image, 1):
+                get_tensor_saver().save(anchors_per_layer.bbox, 'anchors', 'rpn/anchors', level=l, im_idx=i)
 
         if self.training:
             return self._forward_train(anchors, objectness, rpn_box_regression, targets)
@@ -174,6 +184,10 @@ class RPNModule(torch.nn.Module):
                 boxes = self.box_selector_train(
                     anchors, objectness, rpn_box_regression, targets
                 )
+
+        for i, boxes_per_im in enumerate(boxes):
+            get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
+        
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
         )
@@ -194,6 +208,10 @@ class RPNModule(torch.nn.Module):
                 box.get_field("objectness").sort(descending=True)[1] for box in boxes
             ]
             boxes = [box[ind] for box, ind in zip(boxes, inds)]
+
+        for i, boxes_per_im in enumerate(boxes):
+            get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
+
         return boxes, {}
 
 

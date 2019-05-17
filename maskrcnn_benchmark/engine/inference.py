@@ -12,13 +12,26 @@ from ..utils.comm import all_gather
 from ..utils.comm import synchronize
 from ..utils.timer import Timer, get_time_str
 
+from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
-def compute_on_dataset(model, data_loader, device, timer=None):
+import numpy as np
+
+def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
-    for _, batch in enumerate(tqdm(data_loader)):
+    for idx, batch in enumerate(tqdm(data_loader)):
         images, targets, image_ids = batch
+        if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
+            fake_image_path = os.path.join(cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH, 'image_{}.npy'.format(idx))
+            fake_images = np.load(fake_image_path)
+            fake_images = np.transpose(fake_images, (0, 3, 1, 2))
+            images.tensors = torch.tensor(fake_images)
+            logger.info("Load fake image data from {} at itor {}".format(fake_image_path, idx))
+        else:
+            get_tensor_saver().save(images.tensors, 'images')
+
         images = images.to(device)
         with torch.no_grad():
             if timer:
@@ -57,6 +70,7 @@ def _accumulate_predictions_from_multiple_gpus(predictions_per_gpu):
 
 
 def inference(
+        cfg,
         model,
         data_loader,
         dataset_name,
@@ -76,7 +90,15 @@ def inference(
     total_timer = Timer()
     inference_timer = Timer()
     total_timer.tic()
-    predictions = compute_on_dataset(model, data_loader, device, inference_timer)
+
+    create_tensor_saver(
+        training=False,
+        base_dir="inference_dump",
+        iteration=0,
+        max_iter=1
+    )
+
+    predictions = compute_on_dataset(cfg, model, data_loader, device, logger, inference_timer)
     # wait for all processes to complete before measuring the time
     synchronize()
     total_time = total_timer.toc()

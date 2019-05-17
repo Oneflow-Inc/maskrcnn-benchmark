@@ -28,6 +28,7 @@ from maskrcnn_benchmark.layers import DFConv2d
 from maskrcnn_benchmark.modeling.make_layers import group_norm
 from maskrcnn_benchmark.utils.registry import Registry
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 # ResNet stage specification
 StageSpec = namedtuple(
@@ -81,6 +82,7 @@ ResNet152FPNStagesTo5 = tuple(
 class ResNet(nn.Module):
     def __init__(self, cfg):
         super(ResNet, self).__init__()
+        self.cfg = cfg.clone()
 
         # If we want to use the cfg in forward(), then we should make a copy
         # of it and store it for later use:
@@ -145,10 +147,22 @@ class ResNet(nn.Module):
     def forward(self, x):
         outputs = []
         x = self.stem(x)
+
+        get_tensor_saver().save(tensor=x, tensor_name="stem_out", scope="backbone/stem", save_grad=False)
+
         for stage_name in self.stages:
             x = getattr(self, stage_name)(x)
             if self.return_features[stage_name]:
                 outputs.append(x)
+
+        for i, tensor in enumerate(outputs, 1):
+            get_tensor_saver().save(
+                tensor=tensor,
+                tensor_name="resnet_stage_{}_out".format(i),
+                scope="backbone/stage",
+                save_grad=True if i >= self.cfg.MODEL.BACKBONE.FREEZE_CONV_BODY_AT else False
+            )
+
         return outputs
 
 

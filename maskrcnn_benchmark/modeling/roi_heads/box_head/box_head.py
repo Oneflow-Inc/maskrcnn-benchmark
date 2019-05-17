@@ -7,6 +7,7 @@ from .roi_box_predictors import make_roi_box_predictor
 from .inference import make_roi_box_post_processor
 from .loss import make_roi_box_loss_evaluator
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 class ROIBoxHead(torch.nn.Module):
     """
@@ -15,6 +16,7 @@ class ROIBoxHead(torch.nn.Module):
 
     def __init__(self, cfg, in_channels):
         super(ROIBoxHead, self).__init__()
+        self.cfg = cfg.clone()
         self.feature_extractor = make_roi_box_feature_extractor(cfg, in_channels)
         self.predictor = make_roi_box_predictor(
             cfg, self.feature_extractor.out_channels)
@@ -47,6 +49,20 @@ class ROIBoxHead(torch.nn.Module):
         x = self.feature_extractor(features, proposals)
         # final classifier that converts the features into predictions
         class_logits, box_regression = self.predictor(x)
+
+        get_tensor_saver().save(
+            tensor=class_logits,
+            tensor_name="class_logits",
+            scope="roi_head",
+            save_grad=True
+        )
+
+        get_tensor_saver().save(
+            tensor=box_regression,
+            tensor_name="box_regression",
+            scope="roi_head",
+            save_grad=True
+        )
 
         if not self.training:
             result = self.post_processor((class_logits, box_regression), proposals)

@@ -9,6 +9,7 @@ from .roi_mask_predictors import make_roi_mask_predictor
 from .inference import make_roi_mask_post_processor
 from .loss import make_roi_mask_loss_evaluator
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 def keep_only_positive_boxes(boxes):
     """
@@ -69,6 +70,13 @@ class ROIMaskHead(torch.nn.Module):
         else:
             x = self.feature_extractor(features, proposals)
         mask_logits = self.predictor(x)
+
+        get_tensor_saver().save(
+            tensor=mask_logits,
+            tensor_name="mask_logits",
+            scope="mask_head",
+            save_grad=True
+        )
 
         if not self.training:
             result = self.post_processor(mask_logits, proposals)

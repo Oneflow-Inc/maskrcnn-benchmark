@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 class FPN(nn.Module):
     """
@@ -70,6 +71,15 @@ class FPN(nn.Module):
         elif isinstance(self.top_blocks, LastLevelMaxPool):
             last_results = self.top_blocks(results[-1])
             results.extend(last_results)
+
+        for i, feature in enumerate(results, 1):
+            get_tensor_saver().save(
+                tensor=feature,
+                tensor_name='fpn_feature'.format(i),
+                scope='backbone',
+                save_grad=True,
+                level=i
+            )
 
         return tuple(results)
 

@@ -14,6 +14,9 @@ from apex import amp
 import numpy as np
 import os
 
+from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+
 def reduce_loss_dict(loss_dict):
     """
     Reduce the loss dictionary from all processes so that process with rank
@@ -58,10 +61,20 @@ def do_train(
     model.train()
     start_training_time = time.time()
     end = time.time()
+
+    create_tensor_saver(
+        training=cfg.ONEFLOW_PYTORCH_COMPARING.TRAINING,
+        base_dir="train_dump",
+        iteration=start_iter,
+        max_iter=start_iter + 1
+    )
+
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
+
+        get_tensor_saver().step()
 
         scheduler.step()
 
@@ -72,9 +85,7 @@ def do_train(
             images.tensors = torch.tensor(fake_images)
             logger.info("Load fake image data from {} at itor {}".format(fake_image_path, iteration))
         else:
-            # get_tensor_saver().save(images.tensors, 'images')
-            # TODO: save PyTorch decoded images
-            pass
+            get_tensor_saver().save(images.tensors, 'images')
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]

@@ -10,6 +10,8 @@ from maskrcnn_benchmark.structures.boxlist_ops import remove_small_boxes
 from ..utils import cat
 from .utils import permute_and_flatten
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+
 class RPNPostProcessor(torch.nn.Module):
     """
     Performs post-processing on the outputs of the RPN boxes, before feeding the
@@ -73,7 +75,7 @@ class RPNPostProcessor(torch.nn.Module):
 
         return proposals
 
-    def forward_for_single_feature_map(self, anchors, objectness, box_regression):
+    def forward_for_single_feature_map(self, anchors, objectness, box_regression, level):
         """
         Arguments:
             anchors: list[BoxList]
@@ -108,7 +110,7 @@ class RPNPostProcessor(torch.nn.Module):
         proposals = proposals.view(N, -1, 4)
 
         result = []
-        for proposal, score, im_shape in zip(proposals, objectness, image_shapes):
+        for im_i, (proposal, score, im_shape) in enumerate(zip(proposals, objectness, image_shapes)):
             boxlist = BoxList(proposal, im_shape, mode="xyxy")
             boxlist.add_field("objectness", score)
             boxlist = boxlist.clip_to_image(remove_empty=False)
@@ -120,6 +122,8 @@ class RPNPostProcessor(torch.nn.Module):
                 score_field="objectness",
             )
             result.append(boxlist)
+            get_tensor_saver().save(boxlist.bbox, 'proposals', 'rpn', level=level, im_idx=im_i)
+
         return result
 
     def forward(self, anchors, objectness, box_regression, targets=None):
@@ -136,8 +140,8 @@ class RPNPostProcessor(torch.nn.Module):
         sampled_boxes = []
         num_levels = len(objectness)
         anchors = list(zip(*anchors))
-        for a, o, b in zip(anchors, objectness, box_regression):
-            sampled_boxes.append(self.forward_for_single_feature_map(a, o, b))
+        for level, (a, o, b) in enumerate(zip(anchors, objectness, box_regression), 1):
+            sampled_boxes.append(self.forward_for_single_feature_map(a, o, b, level))
 
         boxlists = list(zip(*sampled_boxes))
         boxlists = [cat_boxlist(boxlist) for boxlist in boxlists]
