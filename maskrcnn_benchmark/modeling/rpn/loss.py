@@ -145,7 +145,9 @@ def make_rpn_loss_evaluator(cfg, box_coder):
     )
 
     fg_bg_sampler = BalancedPositiveNegativeSampler(
-        cfg.MODEL.RPN.BATCH_SIZE_PER_IMAGE, cfg.MODEL.RPN.POSITIVE_FRACTION
+        cfg.MODEL.RPN.BATCH_SIZE_PER_IMAGE,
+        cfg.MODEL.RPN.POSITIVE_FRACTION,
+        cfg.ONEFLOW_PYTORCH_COMPARING.RPN_RANDOM_SAMPLE
     )
 
     loss_evaluator = RPNLossComputation(

@@ -457,5 +457,9 @@ _C.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID = True
 _C.ONEFLOW_PYTORCH_COMPARING.SEQUENTIAL_SAMPLE = False
 # Probability of fliping images when training
 _C.ONEFLOW_PYTORCH_COMPARING.FLIP_PROB = 0.5
-# num of iterations to print loss information
+# Num of iterations to print loss information
 _C.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS = 20
+# RPN random sample
+_C.ONEFLOW_PYTORCH_COMPARING.RPN_RANDOM_SAMPLE = True
+# RoI Head random sample
+_C.ONEFLOW_PYTORCH_COMPARING.ROI_HEAD_RANDOM_SAMPLE = True

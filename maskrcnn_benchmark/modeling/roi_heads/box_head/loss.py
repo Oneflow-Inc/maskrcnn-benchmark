@@ -178,7 +178,9 @@ def make_roi_box_loss_evaluator(cfg):
     box_coder = BoxCoder(weights=bbox_reg_weights)
 
     fg_bg_sampler = BalancedPositiveNegativeSampler(
-        cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE, cfg.MODEL.ROI_HEADS.POSITIVE_FRACTION
+        cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE,
+        cfg.MODEL.ROI_HEADS.POSITIVE_FRACTION,
+        cfg.ONEFLOW_PYTORCH_COMPARING.ROI_HEAD_RANDOM_SAMPLE
     )
 
     cls_agnostic_bbox_reg = cfg.MODEL.CLS_AGNOSTIC_BBOX_REG
