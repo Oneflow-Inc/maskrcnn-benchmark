@@ -157,7 +157,7 @@ MODEL:
     STRADDLE_THRESH: 0
     USE_FPN: True
   RPN_ONLY: False
-  WEIGHT: catalog://ImageNetPretrained/MSRA/R-50
+  WEIGHT: /model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth
 OUTPUT_DIR: .
 PATHS_CATALOG: /home/xfjiang/repos/maskrcnn-benchmark/maskrcnn_benchmark/config/paths_catalog.py
 SOLVER:
@@ -179,3 +179,5 @@ TEST:
   EXPECTED_RESULTS: []
   EXPECTED_RESULTS_SIGMA_TOL: 4
   IMS_PER_BATCH: 8
+ONEFLOW_PYTORCH_COMPARING:
+  FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/old/sample_1_train_of_decoded_blobs

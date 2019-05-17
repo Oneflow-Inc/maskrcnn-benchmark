@@ -444,3 +444,10 @@ _C.DTYPE = "float32"
 
 # Enable verbosity in apex.amp
 _C.AMP_VERBOSE = False
+
+# ---------------------------------------------------------------------------- #
+# OneFlow, PyTorch comparing conf
+# ---------------------------------------------------------------------------- #
+# Load OneFlow decoded images to eliminate JPEG decoder difference
+_C.ONEFLOW_PYTORCH_COMPARING = CN()
+_C.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH = ""

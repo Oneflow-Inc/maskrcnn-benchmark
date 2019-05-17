@@ -11,6 +11,9 @@ from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 
 from apex import amp
 
+import numpy as np
+import os
+
 def reduce_loss_dict(loss_dict):
     """
     Reduce the loss dictionary from all processes so that process with rank
@@ -37,6 +40,7 @@ def reduce_loss_dict(loss_dict):
 
 
 def do_train(
+    cfg,
     model,
     data_loader,
     optimizer,
@@ -60,6 +64,17 @@ def do_train(
         arguments["iteration"] = iteration
 
         scheduler.step()
+
+        if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
+            fake_image_path = os.path.join(cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH, 'image_{}.npy'.format(iteration))
+            fake_images = np.load(fake_image_path)
+            fake_images = np.transpose(fake_images, (0, 3, 1, 2))
+            images.tensors = torch.tensor(fake_images)
+            logger.info("Load fake image data from {} at itor {}".format(fake_image_path, iteration))
+        else:
+            # get_tensor_saver().save(images.tensors, 'images')
+            # TODO: save PyTorch decoded images
+            pass
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
