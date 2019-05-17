@@ -448,6 +448,8 @@ _C.AMP_VERBOSE = False
 # ---------------------------------------------------------------------------- #
 # OneFlow, PyTorch comparing conf
 # ---------------------------------------------------------------------------- #
-# Load OneFlow decoded images to eliminate JPEG decoder difference
 _C.ONEFLOW_PYTORCH_COMPARING = CN()
+# Load OneFlow decoded images to eliminate JPEG decoder difference
 _C.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH = ""
+# PyTorch use catituous catetory id by default, OneFlow don't
+_C.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID = True

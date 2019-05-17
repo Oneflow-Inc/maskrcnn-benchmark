@@ -63,7 +63,7 @@ def do_train(
     end = time.time()
 
     create_tensor_saver(
-        training=cfg.ONEFLOW_PYTORCH_COMPARING.TRAINING,
+        training=True,
         base_dir="train_dump",
         iteration=start_iter,
         max_iter=start_iter + 1

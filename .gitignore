@@ -25,7 +25,10 @@ dist/
 # Pycharm editor settings
 .idea
 
-# project dirs
+# project dirs and files
 /datasets
 /models
 /output
+log.txt
+last_checkpoint
+
