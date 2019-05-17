@@ -158,7 +158,10 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
 
     data_loaders = []
     for dataset in datasets:
-        sampler = make_data_sampler(dataset, shuffle, is_distributed)
+        if cfg.ONEFLOW_PYTORCH_COMPARING.SEQUENTIAL_SAMPLE:
+            sampler = torch.utils.data.sampler.SequentialSampler(dataset)
+        else:
+            sampler = make_data_sampler(dataset, shuffle, is_distributed)
         batch_sampler = make_batch_data_sampler(
             dataset, sampler, aspect_grouping, images_per_gpu, num_iters, start_iter
         )

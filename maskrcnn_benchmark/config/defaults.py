@@ -453,3 +453,7 @@ _C.ONEFLOW_PYTORCH_COMPARING = CN()
 _C.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH = ""
 # PyTorch use catituous catetory id by default, OneFlow don't
 _C.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID = True
+# Load instance in sequential data
+_C.ONEFLOW_PYTORCH_COMPARING.SEQUENTIAL_SAMPLE = False
+# Probability of fliping images when training
+_C.ONEFLOW_PYTORCH_COMPARING.FLIP_PROB = 0.5
