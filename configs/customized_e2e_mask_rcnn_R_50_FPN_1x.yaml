@@ -1,6 +1,6 @@
 
 ONEFLOW_PYTORCH_COMPARING:
-  FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/old/sample_1_train_of_decoded_blobs
+  # FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/old/sample_10_val_of_decoded_blobs
   USE_CONTIGUOUS_CATEGORY_ID: False
   SEQUENTIAL_SAMPLE: True
   FLIP_PROB: 0.0
@@ -13,8 +13,8 @@ DATALOADER:
   NUM_WORKERS: 4
   SIZE_DIVISIBILITY: 32
 DATASETS:
-  TEST: ('coco_1_image_train',)
-  TRAIN: ('coco_1_image_train',)
+  TEST: ('coco_2_image_val',)
+  TRAIN: ('coco_2_image_val',)
 DTYPE: float32
 INPUT:
   BRIGHTNESS: 0.0
@@ -174,7 +174,7 @@ SOLVER:
   BIAS_LR_FACTOR: 2
   CHECKPOINT_PERIOD: 2500
   GAMMA: 0.1
-  IMS_PER_BATCH: 1
+  IMS_PER_BATCH: 2
   MAX_ITER: 90000
   MOMENTUM: 0.9
   STEPS: (60000, 80000)
