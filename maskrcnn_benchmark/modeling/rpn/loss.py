@@ -17,6 +17,8 @@ from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+
 
 class RPNLossComputation(object):
     """
@@ -56,12 +58,20 @@ class RPNLossComputation(object):
     def prepare_targets(self, anchors, targets):
         labels = []
         regression_targets = []
-        for anchors_per_image, targets_per_image in zip(anchors, targets):
+        for img_idx, (anchors_per_image, targets_per_image) in enumerate(zip(anchors, targets)):
             matched_targets = self.match_targets_to_anchors(
                 anchors_per_image, targets_per_image, self.copied_fields
             )
 
             matched_idxs = matched_targets.get_field("matched_idxs")
+
+            get_tensor_saver().save(
+                tensor=matched_idxs,
+                tensor_name="matched_idxs_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
+
             labels_per_image = self.generate_labels_func(matched_targets)
             labels_per_image = labels_per_image.to(dtype=torch.float32)
 
@@ -104,8 +114,38 @@ class RPNLossComputation(object):
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
+
+        num_img = len(sampled_pos_inds)
+        for img_idx in range(num_img):
+            get_tensor_saver().save(
+                tensor=torch.nonzero(sampled_pos_inds[img_idx]).squeeze(1),
+                tensor_name="sampled_pos_inds_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=torch.nonzero(sampled_neg_inds[img_idx]).squeeze(1),
+                tensor_name="sampled_neg_inds_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
+
         sampled_pos_inds = torch.nonzero(torch.cat(sampled_pos_inds, dim=0)).squeeze(1)
         sampled_neg_inds = torch.nonzero(torch.cat(sampled_neg_inds, dim=0)).squeeze(1)
+
+        get_tensor_saver().save(
+            tensor=sampled_pos_inds,
+            tensor_name="sampled_pos_inds",
+            scope="rpn",
+            save_grad=False
+        )
+
+        get_tensor_saver().save(
+            tensor=sampled_neg_inds,
+            tensor_name="sampled_neg_inds",
+            scope="rpn",
+            save_grad=False
+        )
 
         sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
 
@@ -117,12 +157,33 @@ class RPNLossComputation(object):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
+        get_tensor_saver().save(
+            tensor=box_regression[sampled_pos_inds],
+            tensor_name="bbox_pred",
+            scope="rpn",
+            save_grad=False
+        )
+
+        get_tensor_saver().save(
+            tensor=regression_targets[sampled_pos_inds],
+            tensor_name="bbox_target",
+            scope="rpn",
+            save_grad=False
+        )
+
         box_loss = smooth_l1_loss(
             box_regression[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
             beta=1.0 / 9,
             size_average=False,
         ) / (sampled_inds.numel())
+
+        get_tensor_saver().save(
+            tensor=labels[sampled_inds],
+            tensor_name="rpn_cls_labels",
+            scope="rpn",
+            save_grad=False
+        )
 
         objectness_loss = F.binary_cross_entropy_with_logits(
             objectness[sampled_inds], labels[sampled_inds]

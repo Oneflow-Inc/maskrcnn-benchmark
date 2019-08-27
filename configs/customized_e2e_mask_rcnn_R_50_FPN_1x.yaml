@@ -1,6 +1,6 @@
 
 ONEFLOW_PYTORCH_COMPARING:
-  # FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/old/sample_10_val_of_decoded_blobs
+  FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/of_decoded_blobs/sample_2_val
   USE_CONTIGUOUS_CATEGORY_ID: False
   SEQUENTIAL_SAMPLE: True
   FLIP_PROB: 0.0
