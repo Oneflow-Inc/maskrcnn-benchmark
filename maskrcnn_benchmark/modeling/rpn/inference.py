@@ -153,6 +153,14 @@ class RPNPostProcessor(torch.nn.Module):
         if self.training and targets is not None:
             boxlists = self.add_gt_proposals(boxlists, targets)
 
+        for img_idx, boxlist in enumerate(boxlists):
+            get_tensor_saver().save(
+                tensor=boxlist.bbox,
+                tensor_name='final_proposals_img_{}'.format(img_idx),
+                scope='rpn',
+                save_grad=False,
+            )
+
         return boxlists
 
     def select_over_all_levels(self, boxlists):
