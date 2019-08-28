@@ -185,6 +185,13 @@ class RPNLossComputation(object):
             save_grad=False
         )
 
+        get_tensor_saver().save(
+            tensor=objectness[sampled_inds],
+            tensor_name="rpn_cls_logits",
+            scope="rpn",
+            save_grad=False
+        )
+
         objectness_loss = F.binary_cross_entropy_with_logits(
             objectness[sampled_inds], labels[sampled_inds]
         )

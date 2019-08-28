@@ -100,8 +100,14 @@ class RPNHead(nn.Module):
     def forward(self, x):
         logits = []
         bbox_reg = []
-        for feature in x:
+        for layer_idx, feature in enumerate(x):
             t = F.relu(self.conv(feature))
+            get_tensor_saver().save(
+                tensor=t,
+                tensor_name="rpn-head_conv_out_layer_{}".format(layer_idx),
+                scope="rpn/head",
+                save_grad=True
+            )
             logits.append(self.cls_logits(t))
             bbox_reg.append(self.bbox_pred(t))
         return logits, bbox_reg
