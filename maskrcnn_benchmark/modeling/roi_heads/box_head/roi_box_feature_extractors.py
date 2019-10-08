@@ -9,6 +9,7 @@ from maskrcnn_benchmark.modeling.poolers import Pooler
 from maskrcnn_benchmark.modeling.make_layers import group_norm
 from maskrcnn_benchmark.modeling.make_layers import make_fc
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 @registry.ROI_BOX_FEATURE_EXTRACTORS.register("ResNet50Conv5ROIFeatureExtractor")
 class ResNet50Conv5ROIFeatureExtractor(nn.Module):
@@ -72,6 +73,13 @@ class FPN2MLPFeatureExtractor(nn.Module):
         self.out_channels = representation_size
 
     def forward(self, x, proposals):
+        for img_idx in range(len(proposals)):
+            get_tensor_saver().save(
+                tensor=proposals[img_idx].bbox,
+                tensor_name="subsampled_proposals_img_{}".format(img_idx),
+                scope="roi_head",
+                save_grad=False
+            )
         x = self.pooler(x, proposals)
         x = x.view(x.size(0), -1)
 

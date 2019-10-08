@@ -103,11 +103,37 @@ class RPNPostProcessor(torch.nn.Module):
         concat_anchors = torch.cat([a.bbox for a in anchors], dim=0)
         concat_anchors = concat_anchors.reshape(N, -1, 4)[batch_idx, topk_idx]
 
+        get_tensor_saver().save(
+            tensor=concat_anchors.view(-1, 4),
+            tensor_name="ref_boxes",
+            scope="rpn/box_decode",
+            save_grad=False
+        )
+        get_tensor_saver().save(
+            tensor=box_regression.view(-1, 4),
+            tensor_name="boxes_delta",
+            scope="rpn/box_decode",
+            save_grad=False
+        )
         proposals = self.box_coder.decode(
             box_regression.view(-1, 4), concat_anchors.view(-1, 4)
         )
+        get_tensor_saver().save(
+            tensor=proposals,
+            tensor_name="boxes",
+            scope="rpn/box_decode",
+            save_grad=False
+        )
 
         proposals = proposals.view(N, -1, 4)
+
+        for img_idx, _ in enumerate(proposals):
+            get_tensor_saver().save(
+                tensor=proposals[img_idx],
+                tensor_name="proposals_after_decode_img_{}_layer_{}".format(img_idx, level),
+                scope="rpn",
+                save_grad=False
+            )
 
         result = []
         for im_i, (proposal, score, im_shape) in enumerate(zip(proposals, objectness, image_shapes)):

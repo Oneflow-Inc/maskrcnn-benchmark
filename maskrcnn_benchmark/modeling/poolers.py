@@ -7,6 +7,7 @@ from maskrcnn_benchmark.layers import ROIAlign
 
 from .utils import cat
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 class LevelMapper(object):
     """Determine which FPN level each RoI in a set of RoIs should map to based
@@ -98,10 +99,25 @@ class Pooler(nn.Module):
         """
         num_levels = len(self.poolers)
         rois = self.convert_to_roi_format(boxes)
+
+        get_tensor_saver().save(
+            tensor=rois,
+            tensor_name="rois_with_image_id",
+            scope="roi_head",
+            save_grad=False
+        )
+
         if num_levels == 1:
             return self.poolers[0](x[0], rois)
 
         levels = self.map_levels(boxes)
+
+        get_tensor_saver().save(
+            tensor=levels,
+            tensor_name="levels",
+            scope="roi_head",
+            save_grad=False
+        )
 
         num_rois = len(rois)
         num_channels = x[0].shape[1]
@@ -117,6 +133,33 @@ class Pooler(nn.Module):
             idx_in_level = torch.nonzero(levels == level).squeeze(1)
             rois_per_level = rois[idx_in_level]
             result[idx_in_level] = pooler(per_level_feature, rois_per_level).to(dtype)
+
+            if len(rois) == 512:
+                get_tensor_saver().save(
+                    tensor=per_level_feature,
+                    tensor_name="per_level_feature_{}".format(level),
+                    scope="roi_head",
+                    save_grad=True,
+                )
+                get_tensor_saver().save(
+                    tensor=rois_per_level,
+                    tensor_name="rois_per_level_{}".format(level),
+                    scope="roi_head",
+                    save_grad=False,
+                )
+                get_tensor_saver().save(
+                    tensor=pooler(per_level_feature, rois_per_level).to(dtype),
+                    tensor_name="roi_feature_{}".format(level),
+                    scope="roi_head",
+                    save_grad=True,
+                )
+
+        get_tensor_saver().save(
+            tensor=result,
+            tensor_name="roi_align_results",
+            scope="roi_head",
+            save_grad=True,
+        )
 
         return result
 
