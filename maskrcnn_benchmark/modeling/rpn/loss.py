@@ -67,7 +67,7 @@ class RPNLossComputation(object):
 
             get_tensor_saver().save(
                 tensor=matched_idxs,
-                tensor_name="matched_idxs_img_{}".format(img_idx),
+                tensor_name="CHECK_POINT_matched_idxs_img_{}".format(img_idx),
                 scope="rpn",
                 save_grad=False
             )
@@ -119,13 +119,13 @@ class RPNLossComputation(object):
         for img_idx in range(num_img):
             get_tensor_saver().save(
                 tensor=torch.nonzero(sampled_pos_inds[img_idx]).squeeze(1),
-                tensor_name="sampled_pos_inds_img_{}".format(img_idx),
+                tensor_name="CHECK_POINT_sampled_pos_inds_img_{}".format(img_idx),
                 scope="rpn",
                 save_grad=False
             )
             get_tensor_saver().save(
                 tensor=torch.nonzero(sampled_neg_inds[img_idx]).squeeze(1),
-                tensor_name="sampled_neg_inds_img_{}".format(img_idx),
+                tensor_name="CHECK_POINT_sampled_neg_inds_img_{}".format(img_idx),
                 scope="rpn",
                 save_grad=False
             )
@@ -159,14 +159,14 @@ class RPNLossComputation(object):
 
         get_tensor_saver().save(
             tensor=box_regression[sampled_pos_inds],
-            tensor_name="bbox_pred",
+            tensor_name="CHECK_POINT_bbox_pred",
             scope="rpn",
             save_grad=False
         )
 
         get_tensor_saver().save(
             tensor=regression_targets[sampled_pos_inds],
-            tensor_name="bbox_target",
+            tensor_name="CHECK_POINT_bbox_target",
             scope="rpn",
             save_grad=False
         )
@@ -180,14 +180,14 @@ class RPNLossComputation(object):
 
         get_tensor_saver().save(
             tensor=labels[sampled_inds],
-            tensor_name="rpn_cls_labels",
+            tensor_name="CHECK_POINT_rpn_cls_labels",
             scope="rpn",
             save_grad=False
         )
 
         get_tensor_saver().save(
             tensor=objectness[sampled_inds],
-            tensor_name="rpn_cls_logits",
+            tensor_name="CHECK_POINT_rpn_cls_logits",
             scope="rpn",
             save_grad=False
         )

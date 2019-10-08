@@ -148,7 +148,7 @@ class ResNet(nn.Module):
         outputs = []
         x = self.stem(x)
 
-        get_tensor_saver().save(tensor=x, tensor_name="stem_out", scope="backbone/stem", save_grad=False)
+        get_tensor_saver().save(tensor=x, tensor_name="CHECK_POINT_stem_out", scope="backbone/stem", save_grad=False)
 
         for stage_name in self.stages:
             x = getattr(self, stage_name)(x)
@@ -158,7 +158,7 @@ class ResNet(nn.Module):
         for i, tensor in enumerate(outputs, 1):
             get_tensor_saver().save(
                 tensor=tensor,
-                tensor_name="resnet_stage_{}_out".format(i),
+                tensor_name="CHECK_POINT_resnet_stage_{}_out".format(i),
                 scope="backbone/stage",
                 save_grad=True if i >= self.cfg.MODEL.BACKBONE.FREEZE_CONV_BODY_AT else False
             )

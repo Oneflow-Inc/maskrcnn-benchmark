@@ -75,7 +75,7 @@ class FPN(nn.Module):
         for i, feature in enumerate(results, 1):
             get_tensor_saver().save(
                 tensor=feature,
-                tensor_name='fpn_feature'.format(i),
+                tensor_name='CHECK_POINT_fpn_feature'.format(i),
                 scope='backbone',
                 save_grad=True,
                 level=i

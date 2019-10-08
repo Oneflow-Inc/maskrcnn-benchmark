@@ -85,7 +85,7 @@ def do_train(
             images.tensors = torch.tensor(fake_images)
             logger.info("Load fake image data from {} at itor {}".format(fake_image_path, iteration))
         else:
-            get_tensor_saver().save(images.tensors, 'images')
+            get_tensor_saver().save(images.tensors, 'CHECK_POINT_images')
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
