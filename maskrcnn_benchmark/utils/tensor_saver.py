@@ -1,5 +1,10 @@
 import os
 import numpy
+import pickle as pk
+
+from maskrcnn_benchmark.modeling.roi_heads.mask_head.loss import (
+    project_masks_on_boxes,
+)
 
 
 class TensorSaver(object):
@@ -18,7 +23,15 @@ class TensorSaver(object):
         else:
             self.iteration += 1
 
-    def save(self, tensor, tensor_name, scope=None, save_grad=False, level=None, im_idx=None):
+    def save(
+        self,
+        tensor,
+        tensor_name,
+        scope=None,
+        save_grad=False,
+        level=None,
+        im_idx=None,
+    ):
         if self.iteration > self.max_iteration:
             return
 
@@ -40,8 +53,14 @@ class TensorSaver(object):
         numpy.save(save_path, tensor.cpu().detach().numpy())
 
         if save_grad and self.training:
-            grad_save_path = os.path.join(save_dir, "{}_grad{}".format(tensor_name, suffix))
-            tensor.register_hook(lambda grad: numpy.save(grad_save_path, grad.cpu().detach().numpy()))
+            grad_save_path = os.path.join(
+                save_dir, "{}_grad{}".format(tensor_name, suffix)
+            )
+            tensor.register_hook(
+                lambda grad: numpy.save(
+                    grad_save_path, grad.cpu().detach().numpy()
+                )
+            )
 
 
 tensor_saver = None
@@ -58,3 +77,36 @@ def get_tensor_saver():
         raise Exception("Tensor saver not created yet")
 
     return tensor_saver
+
+
+def dump_data(iter, images, targets):
+    data = {}
+    data["images"] = images.tensors.detach().numpy()
+    print(type(data["images"]))
+    print(data["images"].shape)
+
+    data["gt_bbox"] = []
+    data["gt_labels"] = []
+    data["gt_segm"] = []
+    data["image_size"] = []
+    for box_list in targets:
+        data["gt_bbox"].append(box_list.bbox.detach().numpy())
+        data["gt_labels"].append(
+            numpy.array(box_list.get_field("labels"), dtype=numpy.int32)
+        )
+        segm_mask = project_masks_on_boxes(
+            box_list.get_field("masks"), box_list, 28
+        )
+        data["gt_segm"].append(
+            segm_mask.detach().numpy().astype(numpy.int8)
+        )
+        data["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
+
+    data["image_size"] = numpy.stack(data["image_size"], axis=0)
+
+    dump_dir = os.path.join("train_dump", "iter_{}".format(iter))
+    if not os.path.exists(dump_dir):
+        os.makedirs(dump_dir)
+
+    with open(os.path.join(dump_dir, "data.pkl"), "wb") as f:
+        pk.dump(data, f, protocol=pk.HIGHEST_PROTOCOL)

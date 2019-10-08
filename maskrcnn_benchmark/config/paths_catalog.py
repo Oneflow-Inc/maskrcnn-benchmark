@@ -5,7 +5,7 @@ import os
 
 
 class DatasetCatalog(object):
-    DATA_DIR = "/dataset"
+    DATA_DIR = "/dataset/mask_rcnn"
     DATASETS = {
         "coco_1_image_train": {
             "img_dir": "mscoco_2017/train2017",
