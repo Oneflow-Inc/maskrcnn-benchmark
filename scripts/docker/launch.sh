@@ -5,6 +5,8 @@ extra="$extra -v /dataset:/dataset"
 
 extra="$extra -v $PWD:/maskrcnn_benchmark"
 extra="$extra --workdir /maskrcnn_benchmark"
+extra="$extra -v $HOME:$HOME"
+extra="$extra --user $(id -u):$(id -g)"
 
 prelude=""
 # prelude="$prelude cp $installed/_C.* /maskrcnn_benchmark;"
