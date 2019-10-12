@@ -109,4 +109,4 @@ def dump_data(iter, images, targets):
         os.makedirs(dump_dir)
 
     with open(os.path.join(dump_dir, "data.pkl"), "wb") as f:
-        pk.dump(data, f, protocol=pk.HIGHEST_PROTOCOL)
+        pk.dump(data, f, protocol=2)
