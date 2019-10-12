@@ -16,6 +16,8 @@ import os
 
 from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
+from maskrcnn_benchmark.utils.tensor_saver import dump_data
+
 
 def reduce_loss_dict(loss_dict):
     """
@@ -66,10 +68,12 @@ def do_train(
         training=True,
         base_dir="train_dump",
         iteration=start_iter,
-        max_iter=start_iter + 1
+        max_iter=start_iter + 1,
     )
 
-    for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
+    for iteration, (images, targets, _) in enumerate(
+        data_loader, start_iter
+    ):
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
@@ -79,13 +83,20 @@ def do_train(
         scheduler.step()
 
         if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
-            fake_image_path = os.path.join(cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH, 'image_{}.npy'.format(iteration))
+            fake_image_path = os.path.join(
+                cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH,
+                "image_{}.npy".format(iteration),
+            )
             fake_images = np.load(fake_image_path)
             fake_images = np.transpose(fake_images, (0, 3, 1, 2))
             images.tensors = torch.tensor(fake_images)
-            logger.info("Load fake image data from {} at itor {}".format(fake_image_path, iteration))
-        else:
-            get_tensor_saver().save(images.tensors, 'CHECK_POINT_images')
+            logger.info(
+                "Load fake image data from {} at itor {}".format(
+                    fake_image_path, iteration
+                )
+            )
+
+        dump_data(iteration, images, targets)
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
@@ -113,7 +124,10 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0 or iteration == max_iter:
+        if (
+            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0
+            or iteration == max_iter
+        ):
             logger.info(
                 meters.delimiter.join(
                     [
