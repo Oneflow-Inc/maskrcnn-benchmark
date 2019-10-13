@@ -107,6 +107,7 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
         print("coco __getitem__ anno len: ", len(anno))
         print("coco __getitem__ anno image_ids: ", [a["image_id"] for a in anno])
+        print("coco __getitem__ anno example: ", anno[0])
         return img, target, anno[0]["image_id"]
 
     def get_img_info(self, index):
