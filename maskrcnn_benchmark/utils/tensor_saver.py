@@ -47,7 +47,7 @@ class TensorSaver(object):
             suffix = suffix + ".image{}".format(im_idx)
         if isinstance(level, int):
             suffix = suffix + ".layer{}".format(level)
-        suffix = suffix + "." + str(tuple(tensor.size()))
+        # suffix = suffix + "." + str(tuple(tensor.size()))
 
         save_path = os.path.join(save_dir, "{}{}".format(tensor_name, suffix))
         numpy.save(save_path, tensor.cpu().detach().numpy())
@@ -97,9 +97,7 @@ def dump_data(iter, images, targets):
         segm_mask = project_masks_on_boxes(
             box_list.get_field("masks"), box_list, 28
         )
-        data["gt_segm"].append(
-            segm_mask.detach().numpy().astype(numpy.int8)
-        )
+        data["gt_segm"].append(segm_mask.detach().numpy().astype(numpy.int8))
         data["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
 
     data["image_size"] = numpy.stack(data["image_size"], axis=0)

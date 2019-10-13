@@ -345,19 +345,28 @@ class Bottleneck(nn.Module):
             nn.init.kaiming_uniform_(l.weight, a=1)
 
     def forward(self, x):
+        # assert is for debug only
+        assert(self.block_index is not None)
+        assert(self.stage_index is not None)
+
         identity = x
 
+        stage_info = "stage-{}-block-{}".format(str(self.stage_index), str(self.block_index))
+
         out = self.conv1(x)
+
+        get_tensor_saver().save(tensor=out, tensor_name="conv1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+
         out = self.bn1(out)
         out = F.relu_(out)
 
+        get_tensor_saver().save(tensor=out, tensor_name="bn1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+
         out = self.conv2(out)
         out = self.bn2(out)
-        assert(self.stage_index is not None)
-        assert(self.block_index is not None)
-        stage_info = "stage-{}-block-{}".format(str(self.stage_index), str(self.block_index))
-        get_tensor_saver().save(tensor=out, tensor_name="bn2", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
         out = F.relu_(out)
+        
+        get_tensor_saver().save(tensor=out, tensor_name="bn2", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out0 = self.conv3(out)
         out = self.bn3(out0)

@@ -157,6 +157,7 @@ def main():
         synchronize()
 
     cfg.merge_from_file(args.config_file)
+    # cfg.merge_from_file("/home/caishenghang/oneflow/oneflow/python/model/maskrcnn/mask_rcnn_R_50_FPN_1x.yaml")
     cfg.merge_from_list(args.opts)
     cfg.freeze()
 
