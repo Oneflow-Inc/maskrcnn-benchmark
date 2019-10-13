@@ -71,7 +71,7 @@ def do_train(
         max_iter=start_iter + 1,
     )
 
-    for iteration, (images, targets, _) in enumerate(
+    for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
     ):
         data_time = time.time() - end
@@ -96,7 +96,7 @@ def do_train(
                 )
             )
 
-        dump_data(iteration, images, targets)
+        dump_data(iteration, images, targets, image_id)
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]

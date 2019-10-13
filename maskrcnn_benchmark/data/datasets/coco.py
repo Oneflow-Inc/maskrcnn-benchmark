@@ -72,6 +72,7 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self._transforms = transforms
         self.use_contiguous_category_id = use_contiguous_category_id
+        print("coco dataset first 10 image_ids: ", self.ids[0:10])
 
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
@@ -104,7 +105,9 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        return img, target, idx
+        print("coco __getitem__ anno len: ", len(anno))
+        print("coco __getitem__ anno image_ids: ", [a["image_id"] for a in anno])
+        return img, target, anno[0]["image_id"]
 
     def get_img_info(self, index):
         img_id = self.id_to_img_map[index]

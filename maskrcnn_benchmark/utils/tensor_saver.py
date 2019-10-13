@@ -79,8 +79,9 @@ def get_tensor_saver():
     return tensor_saver
 
 
-def dump_data(iter, images, targets):
+def dump_data(iter, images, targets, image_id):
     data = {}
+    data["image_id"] = str(image_id)
     data["images"] = images.tensors.detach().numpy()
     print(type(data["images"]))
     print(data["images"].shape)
