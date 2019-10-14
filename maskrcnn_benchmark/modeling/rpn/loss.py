@@ -124,6 +124,13 @@ class RPNLossComputation(object):
             box_loss (Tensor
         """
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
+        for img_idx, anchors_per_img in enumerate(anchors):
+            get_tensor_saver().save(
+                tensor=anchors_per_img.bbox,
+                tensor_name="concated_anchors_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
         labels, regression_targets = self.prepare_targets(anchors, targets)
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
 
