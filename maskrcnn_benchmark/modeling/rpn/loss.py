@@ -132,6 +132,15 @@ class RPNLossComputation(object):
                 save_grad=False
             )
         labels, regression_targets = self.prepare_targets(anchors, targets)
+
+        for img_idx, labels_per_img in enumerate(labels):
+            get_tensor_saver().save(
+                tensor=labels_per_img,
+                tensor_name="labels_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
+
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
 
         num_img = len(sampled_pos_inds)
