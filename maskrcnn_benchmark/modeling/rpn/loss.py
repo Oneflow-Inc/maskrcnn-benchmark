@@ -49,6 +49,12 @@ class RPNLossComputation(object):
             scope="rpn",
             save_grad=False
         )
+        get_tensor_saver().save(
+            tensor=torch.transpose(match_quality_matrix, 1, 0),
+            tensor_name="CHECK_POINT_iou_matrix_transposed{}".format(img_idx),
+            scope="rpn",
+            save_grad=False
+        )
         matched_idxs = self.proposal_matcher(match_quality_matrix)
         # RPN doesn't need any fields from target
         # for creating the labels, so clear them all
