@@ -123,7 +123,8 @@ class ResNet(nn.Module):
                     "stage_with_dcn": stage_with_dcn,
                     "with_modulated_dcn": cfg.MODEL.RESNETS.WITH_MODULATED_DCN,
                     "deformable_groups": cfg.MODEL.RESNETS.DEFORMABLE_GROUPS,
-                }
+                },
+                stage_index=stage_spec.index
             )
             in_channels = out_channels
             self.add_module(name, module)
@@ -205,7 +206,8 @@ class ResNetHead(nn.Module):
                 stride_in_1x1,
                 first_stride=stride,
                 dilation=dilation,
-                dcn_config=dcn_config
+                dcn_config=dcn_config,
+                stage_index=stage.index,
             )
             stride = None
             self.add_module(name, module)
@@ -228,11 +230,12 @@ def _make_stage(
     stride_in_1x1,
     first_stride,
     dilation=1,
-    dcn_config={}
+    dcn_config={},
+    stage_index=None
 ):
     blocks = []
     stride = first_stride
-    for _ in range(block_count):
+    for block_index in range(block_count):
         blocks.append(
             transformation_module(
                 in_channels,
@@ -242,7 +245,9 @@ def _make_stage(
                 stride_in_1x1,
                 stride,
                 dilation=dilation,
-                dcn_config=dcn_config
+                dcn_config=dcn_config,
+                stage_index=stage_index,
+                block_index=block_index,
             )
         )
         stride = 1
@@ -261,9 +266,13 @@ class Bottleneck(nn.Module):
         stride,
         dilation,
         norm_func,
-        dcn_config
+        dcn_config,
+        stage_index=None,
+        block_index=None,
     ):
         super(Bottleneck, self).__init__()
+        self.stage_index = stage_index
+        self.block_index = block_index
 
         self.downsample = None
         if in_channels != out_channels:
@@ -336,15 +345,28 @@ class Bottleneck(nn.Module):
             nn.init.kaiming_uniform_(l.weight, a=1)
 
     def forward(self, x):
+        # assert is for debug only
+        assert(self.block_index is not None)
+        assert(self.stage_index is not None)
+
         identity = x
 
+        stage_info = "stage-{}-block-{}".format(str(self.stage_index), str(self.block_index))
+
         out = self.conv1(x)
+
+        get_tensor_saver().save(tensor=out, tensor_name="conv1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+
         out = self.bn1(out)
         out = F.relu_(out)
+
+        get_tensor_saver().save(tensor=out, tensor_name="bn1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out = self.conv2(out)
         out = self.bn2(out)
         out = F.relu_(out)
+        
+        get_tensor_saver().save(tensor=out, tensor_name="bn2", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out0 = self.conv3(out)
         out = self.bn3(out0)
@@ -390,7 +412,9 @@ class BottleneckWithFixedBatchNorm(Bottleneck):
         stride_in_1x1=True,
         stride=1,
         dilation=1,
-        dcn_config={}
+        dcn_config={},
+        stage_index=None,
+        block_index=None,
     ):
         super(BottleneckWithFixedBatchNorm, self).__init__(
             in_channels=in_channels,
@@ -401,7 +425,9 @@ class BottleneckWithFixedBatchNorm(Bottleneck):
             stride=stride,
             dilation=dilation,
             norm_func=FrozenBatchNorm2d,
-            dcn_config=dcn_config
+            dcn_config=dcn_config,
+            stage_index=stage_index,
+            block_index=block_index
         )
 
 
