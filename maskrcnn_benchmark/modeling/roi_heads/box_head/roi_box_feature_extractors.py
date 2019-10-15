@@ -80,7 +80,7 @@ class FPN2MLPFeatureExtractor(nn.Module):
                 scope="roi_head",
                 save_grad=False
             )
-        x = self.pooler(x, proposals)
+        x = self.pooler(x, proposals, "roi_head")
         x = x.view(x.size(0), -1)
 
         x = F.relu(self.fc6(x))
