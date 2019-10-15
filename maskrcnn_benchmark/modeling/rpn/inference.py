@@ -95,7 +95,18 @@ class RPNPostProcessor(torch.nn.Module):
 
         pre_nms_top_n = min(self.pre_nms_top_n, num_anchors)
         objectness, topk_idx = objectness.topk(pre_nms_top_n, dim=1, sorted=True)
-
+        get_tensor_saver().save(
+            tensor=topk_idx[0,:],
+            tensor_name="topk_idx_img_{}_layer_{}".format(0, level),
+            scope="rpn",
+            save_grad=False
+        )
+        get_tensor_saver().save(
+            tensor=topk_idx[1,:],
+            tensor_name="topk_idx_img_{}_layer_{}".format(1, level),
+            scope="rpn",
+            save_grad=False
+        )
         batch_idx = torch.arange(N, device=device)[:, None]
         box_regression = box_regression[batch_idx, topk_idx]
 
@@ -141,11 +152,15 @@ class RPNPostProcessor(torch.nn.Module):
             boxlist.add_field("objectness", score)
             boxlist = boxlist.clip_to_image(remove_empty=False)
             boxlist = remove_small_boxes(boxlist, self.min_size)
+            get_tensor_saver().save(boxlist.bbox, 'after_remove_small_boxes', 'rpn', level=level, im_idx=im_i)
+            def dump_callback(keep):
+                get_tensor_saver().save(keep, 'nms_indices', 'rpn', level=level, im_idx=im_i)
             boxlist = boxlist_nms(
                 boxlist,
                 self.nms_thresh,
                 max_proposals=self.post_nms_top_n,
                 score_field="objectness",
+                dump_callback=dump_callback
             )
             result.append(boxlist)
             get_tensor_saver().save(boxlist.bbox, 'proposals', 'rpn', level=level, im_idx=im_i)

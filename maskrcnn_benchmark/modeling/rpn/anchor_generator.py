@@ -97,6 +97,7 @@ class AnchorGenerator(nn.Module):
     def add_visibility_to(self, boxlist):
         image_width, image_height = boxlist.size
         anchors = boxlist.bbox
+        print("image_width, image_height", image_width, image_height)
         if self.straddle_thresh >= 0:
             inds_inside = (
                 (anchors[..., 0] >= -self.straddle_thresh)
