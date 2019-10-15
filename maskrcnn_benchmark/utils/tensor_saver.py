@@ -2,11 +2,6 @@ import os
 import numpy
 import pickle as pk
 
-from maskrcnn_benchmark.modeling.roi_heads.mask_head.loss import (
-    project_masks_on_boxes,
-)
-
-
 class TensorSaver(object):
     def __init__(self, training, base_dir, iteration, max_iter):
         self.training = training
@@ -80,6 +75,10 @@ def get_tensor_saver():
 
 
 def dump_data(iter, images, targets, image_id):
+    from maskrcnn_benchmark.modeling.roi_heads.mask_head.loss import (
+        project_masks_on_boxes,
+    )
+
     data = {}
     data["image_id"] = str(image_id)
     data["images"] = images.tensors.detach().numpy()
