@@ -57,7 +57,7 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
         self.out_channels = layer_features
 
     def forward(self, x, proposals):
-        x = self.pooler(x, proposals)
+        x = self.pooler(x, proposals, "mask_head")
 
         for layer_name in self.blocks:
             x = F.relu(getattr(self, layer_name)(x))

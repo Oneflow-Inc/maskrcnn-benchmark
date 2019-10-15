@@ -42,7 +42,7 @@ class TensorSaver(object):
             suffix = suffix + ".image{}".format(im_idx)
         if isinstance(level, int):
             suffix = suffix + ".layer{}".format(level)
-        # suffix = suffix + "." + str(tuple(tensor.size()))
+        suffix = suffix + "." + str(tuple(tensor.size()))
 
         save_path = os.path.join(save_dir, "{}{}".format(tensor_name, suffix))
         numpy.save(save_path, tensor.cpu().detach().numpy())
