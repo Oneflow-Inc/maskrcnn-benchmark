@@ -129,10 +129,19 @@ class Pooler(nn.Module):
             dtype=dtype,
             device=device,
         )
+        idx_in_level_list = []
         for level, (per_level_feature, pooler) in enumerate(zip(x, self.poolers)):
             idx_in_level = torch.nonzero(levels == level).squeeze(1)
+            idx_in_level_list.append(idx_in_level)
             rois_per_level = rois[idx_in_level]
             result[idx_in_level] = pooler(per_level_feature, rois_per_level).to(dtype)
+
+            get_tensor_saver().save(
+                tensor=idx_in_level,
+                tensor_name="{}_idx_in_level_{}".format(head_name, level),
+                scope=head_name,
+                save_grad=False,
+            )
 
             get_tensor_saver().save(
                 tensor=per_level_feature,
@@ -152,7 +161,11 @@ class Pooler(nn.Module):
                 scope=head_name,
                 save_grad=True,
             )
-
+        get_tensor_saver().save(
+            tensor=torch.cat(idx_in_level_list, 0),
+            tensor_name="origin_indices",
+            scope=head_name
+        )
         get_tensor_saver().save(
             tensor=result,
             tensor_name="{}_pooler_result".format(head_name),
