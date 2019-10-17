@@ -47,6 +47,12 @@ class ROIBoxHead(torch.nn.Module):
         # extract features that will be fed to the final classifier. The
         # feature_extractor generally corresponds to the pooler + heads
         x = self.feature_extractor(features, proposals)
+        get_tensor_saver().save(
+            tensor=x,
+            tensor_name="fc7",
+            scope="roi_head",
+            save_grad=True
+        )
         # final classifier that converts the features into predictions
         class_logits, box_regression = self.predictor(x)
 
