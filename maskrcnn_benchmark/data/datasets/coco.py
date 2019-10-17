@@ -38,8 +38,12 @@ def has_valid_annotation(anno):
 
 class COCODataset(torchvision.datasets.coco.CocoDetection):
     def __init__(
-        self, ann_file, root, remove_images_without_annotations, transforms=None,
-        use_contiguous_category_id=True
+        self,
+        ann_file,
+        root,
+        remove_images_without_annotations,
+        transforms=None,
+        use_contiguous_category_id=True,
     ):
         super(COCODataset, self).__init__(root, ann_file)
 
@@ -72,10 +76,11 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self._transforms = transforms
         self.use_contiguous_category_id = use_contiguous_category_id
-        print("coco dataset first 10 image_ids: ", self.ids[0:10])
+        print("coco dataset first 20 image_ids: ", self.ids[0:20])
 
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
+        image_id = anno[0]["image_id"]
 
         # filter crowd annotations
         # TODO might be better to add an extra field
@@ -87,12 +92,14 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
         classes = [obj["category_id"] for obj in anno]
         if self.use_contiguous_category_id:
-            classes = [self.json_category_id_to_contiguous_id[c] for c in classes]
+            classes = [
+                self.json_category_id_to_contiguous_id[c] for c in classes
+            ]
         classes = torch.tensor(classes)
         target.add_field("labels", classes)
 
         masks = [obj["segmentation"] for obj in anno]
-        masks = SegmentationMask(masks, img.size, mode='poly')
+        masks = SegmentationMask(masks, img.size, mode="poly")
         target.add_field("masks", masks)
 
         if anno and "keypoints" in anno[0]:
@@ -105,10 +112,13 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        print("coco __getitem__ anno len: ", len(anno))
-        print("coco __getitem__ anno image_ids: ", [a["image_id"] for a in anno])
-        print("coco __getitem__ anno example: ", anno[0])
-        return img, target, anno[0]["image_id"]
+        print(
+            "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
+                idx, image_id, len(anno)
+            )
+        )
+        # print("coco __getitem__ anno example: ", anno[0])
+        return img, target, image_id
 
     def get_img_info(self, index):
         img_id = self.id_to_img_map[index]
