@@ -95,18 +95,18 @@ class RPNPostProcessor(torch.nn.Module):
 
         pre_nms_top_n = min(self.pre_nms_top_n, num_anchors)
         objectness, topk_idx = objectness.topk(pre_nms_top_n, dim=1, sorted=True)
-        get_tensor_saver().save(
-            tensor=topk_idx[0,:],
-            tensor_name="topk_idx_img_{}_layer_{}".format(0, level),
-            scope="rpn",
-            save_grad=False
-        )
-        get_tensor_saver().save(
-            tensor=topk_idx[1,:],
-            tensor_name="topk_idx_img_{}_layer_{}".format(1, level),
-            scope="rpn",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=topk_idx[0,:],
+        #     tensor_name="topk_idx_img_{}_layer_{}".format(0, level),
+        #     scope="rpn",
+        #     save_grad=False
+        # )
+        # get_tensor_saver().save(
+        #     tensor=topk_idx[1,:],
+        #     tensor_name="topk_idx_img_{}_layer_{}".format(1, level),
+        #     scope="rpn",
+        #     save_grad=False
+        # )
         batch_idx = torch.arange(N, device=device)[:, None]
         box_regression = box_regression[batch_idx, topk_idx]
 

@@ -31,7 +31,12 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
             logger.info("Load fake image data from {} at itor {}".format(fake_image_path, idx))
         else:
             get_tensor_saver().save(images.tensors, 'images')
-
+            image_size = []
+            for box_list in targets:
+                image_size.append(np.array(box_list.size, dtype=np.int32))
+            image_size = np.stack(image_size, axis=0)
+            image_size = np.concatenate([image_size[:, 1:2], image_size[:, 0:1]], axis=1)
+            np.save("image_size", image_size)
         images = images.to(device)
         with torch.no_grad():
             if timer:

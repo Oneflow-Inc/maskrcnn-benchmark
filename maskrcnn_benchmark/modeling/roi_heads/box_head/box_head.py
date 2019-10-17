@@ -64,6 +64,13 @@ class ROIBoxHead(torch.nn.Module):
             save_grad=True
         )
 
+        get_tensor_saver().save(
+            tensor=proposals[0].bbox,
+            tensor_name="proposals",
+            scope="roi_head",
+            save_grad=False
+        )
+
         if not self.training:
             result = self.post_processor((class_logits, box_regression), proposals)
             return x, result, {}
