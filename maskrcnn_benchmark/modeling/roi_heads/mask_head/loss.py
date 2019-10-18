@@ -146,6 +146,12 @@ class MaskRCNNLossComputation(object):
         mask_loss = F.binary_cross_entropy_with_logits(
             mask_logits4loss, mask_targets
         )
+        get_tensor_saver().save(
+            tensor=mask_loss,
+            tensor_name="mask_loss",
+            scope="mask_head",
+            save_grad=True
+        )
         return mask_loss
 
 
