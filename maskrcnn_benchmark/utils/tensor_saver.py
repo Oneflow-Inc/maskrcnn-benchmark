@@ -2,7 +2,6 @@ import os
 import numpy
 import pickle as pk
 
-
 class TensorSaver(object):
     def __init__(self, training, base_dir, iteration, max_iter):
         self.training = training

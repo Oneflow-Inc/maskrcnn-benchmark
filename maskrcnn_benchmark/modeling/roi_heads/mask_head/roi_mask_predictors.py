@@ -5,8 +5,10 @@ from torch.nn import functional as F
 from maskrcnn_benchmark.layers import Conv2d
 from maskrcnn_benchmark.layers import ConvTranspose2d
 from maskrcnn_benchmark.modeling import registry
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
+# what we are using in mask-rcnn
 @registry.ROI_MASK_PREDICTOR.register("MaskRCNNC4Predictor")
 class MaskRCNNC4Predictor(nn.Module):
     def __init__(self, cfg, in_channels):
@@ -28,6 +30,12 @@ class MaskRCNNC4Predictor(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv5_mask(x))
+        get_tensor_saver().save(
+            tensor=x,
+            tensor_name="conv5",
+            scope="mask_head",
+            save_grad=True
+        )
         return self.mask_fcn_logits(x)
 
 

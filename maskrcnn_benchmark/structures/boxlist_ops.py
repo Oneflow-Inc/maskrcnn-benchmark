@@ -4,9 +4,10 @@ import torch
 from .bounding_box import BoxList
 
 from maskrcnn_benchmark.layers import nms as _box_nms
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
-def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="scores"):
+def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="scores", dump_callback=None):
     """
     Performs non-maximum suppression on a boxlist, with scores specified
     in a boxlist field via score_field.
@@ -27,6 +28,8 @@ def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="scores"):
     keep = _box_nms(boxes, score, nms_thresh)
     if max_proposals > 0:
         keep = keep[: max_proposals]
+    if dump_callback is not None:
+        dump_callback(keep)
     boxlist = boxlist[keep]
     return boxlist.convert(mode)
 

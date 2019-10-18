@@ -1,6 +1,6 @@
 
 ONEFLOW_PYTORCH_COMPARING:
-  FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/of_decoded_blobs/sample_2_val
+  # FAKE_IMAGE_DATA_PATH: /dataset/mask_rcnn/of_decoded_blobs/sample_2_val
   USE_CONTIGUOUS_CATEGORY_ID: False
   SEQUENTIAL_SAMPLE: True
   FLIP_PROB: 0.0
@@ -21,9 +21,9 @@ INPUT:
   CONTRAST: 0.0
   HUE: 0.0
   MAX_SIZE_TEST: 1333
-  MAX_SIZE_TRAIN: 1333
+  MAX_SIZE_TRAIN: 1000
   MIN_SIZE_TEST: 800
-  MIN_SIZE_TRAIN: (800,)
+  MIN_SIZE_TRAIN: (600,)
   PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   PIXEL_STD: [1.0, 1.0, 1.0]
   SATURATION: 0.0
@@ -73,7 +73,7 @@ MODEL:
     STAGE_WITH_DCN: (False, False, False, False)
     STEM_FUNC: StemWithFixedBatchNorm
     STEM_OUT_CHANNELS: 64
-    STRIDE_IN_1X1: True
+    STRIDE_IN_1X1: False
     TRANS_FUNC: BottleneckWithFixedBatchNorm
     WIDTH_PER_GROUP: 64
     WITH_MODULATED_DCN: False
@@ -154,21 +154,21 @@ MODEL:
     FG_IOU_THRESHOLD: 0.7
     FPN_POST_NMS_PER_BATCH: False
     FPN_POST_NMS_TOP_N_TEST: 1000
-    FPN_POST_NMS_TOP_N_TRAIN: 500
+    FPN_POST_NMS_TOP_N_TRAIN: 500 #TOP_N_PER_IMG_TRAIN
     MIN_SIZE: 0
     NMS_THRESH: 0.7
     POSITIVE_FRACTION: 0.5
     POST_NMS_TOP_N_TEST: 1000
-    POST_NMS_TOP_N_TRAIN: 500
+    POST_NMS_TOP_N_TRAIN: 500 #NMS_TOP_N_TRAIN
     PRE_NMS_TOP_N_TEST: 1000
-    PRE_NMS_TOP_N_TRAIN: 500
+    PRE_NMS_TOP_N_TRAIN: 500 #TOP_N_PER_FM_TRAIN
     RPN_HEAD: SingleConvRPNHead
     STRADDLE_THRESH: 0
     USE_FPN: True
   RPN_ONLY: False
   WEIGHT: /model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth
 OUTPUT_DIR: .
-PATHS_CATALOG: /home/xfjiang/repos/maskrcnn-benchmark/maskrcnn_benchmark/config/paths_catalog.py
+PATHS_CATALOG: maskrcnn_benchmark/config/paths_catalog.py
 SOLVER:
   BASE_LR: 0.02
   BIAS_LR_FACTOR: 2

@@ -7,6 +7,7 @@ from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.modeling.utils import cat
 from maskrcnn_benchmark.utils.tensor_saver import get_mock_data_maker
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
 def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
@@ -113,6 +114,11 @@ class MaskRCNNLossComputation(object):
         labels, mask_targets = self.prepare_targets(proposals, targets)
 
         labels = cat(labels, dim=0)
+        get_tensor_saver().save(
+            tensor=labels,
+            tensor_name="concat_gt_labels",
+            scope="mask_head",
+        )
         mask_targets = cat(mask_targets, dim=0)
 
         positive_inds = torch.nonzero(labels > 0).squeeze(1)
@@ -124,9 +130,21 @@ class MaskRCNNLossComputation(object):
             return mask_logits.sum() * 0
 
         get_mock_data_maker().update_mask_targets(mask_targets)
+        get_tensor_saver().save(
+            tensor=mask_targets,
+            tensor_name="mask_targets",
+            scope="mask_head",
+        )
+        mask_logits4loss = mask_logits[positive_inds, labels_pos]
+        get_tensor_saver().save(
+            tensor=mask_logits4loss,
+            tensor_name="mask_logits4loss",
+            scope="mask_head",
+            save_grad=True
+        )
 
         mask_loss = F.binary_cross_entropy_with_logits(
-            mask_logits[positive_inds, labels_pos], mask_targets
+            mask_logits4loss, mask_targets
         )
         return mask_loss
 

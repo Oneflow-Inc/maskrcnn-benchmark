@@ -169,7 +169,7 @@ class RPNModule(torch.nn.Module):
 
         for i, anchors_per_image in enumerate(anchors):
             for l, anchors_per_layer in enumerate(anchors_per_image, 1):
-                get_tensor_saver().save(anchors_per_layer.bbox, 'CHECK_POINT_anchors', 'rpn/anchors', level=l, im_idx=i)
+                get_tensor_saver().save(anchors_per_layer.bbox, 'anchors', 'rpn/anchors', level=l, im_idx=i)
 
         if self.training:
             return self._forward_train(anchors, objectness, rpn_box_regression, targets)

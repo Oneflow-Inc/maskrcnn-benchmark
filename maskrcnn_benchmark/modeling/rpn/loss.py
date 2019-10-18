@@ -41,8 +41,20 @@ class RPNLossComputation(object):
         self.generate_labels_func = generate_labels_func
         self.discard_cases = ['not_visibility', 'between_thresholds']
 
-    def match_targets_to_anchors(self, anchor, target, copied_fields=[]):
+    def match_targets_to_anchors(self, img_idx, anchor, target, copied_fields=[]):
         match_quality_matrix = boxlist_iou(target, anchor)
+        get_tensor_saver().save(
+            tensor=match_quality_matrix,
+            tensor_name="CHECK_POINT_iou_matrix_{}".format(img_idx),
+            scope="rpn",
+            save_grad=False
+        )
+        get_tensor_saver().save(
+            tensor=torch.transpose(match_quality_matrix, 1, 0),
+            tensor_name="CHECK_POINT_iou_matrix_transposed{}".format(img_idx),
+            scope="rpn",
+            save_grad=False
+        )
         matched_idxs = self.proposal_matcher(match_quality_matrix)
         # RPN doesn't need any fields from target
         # for creating the labels, so clear them all
@@ -60,7 +72,7 @@ class RPNLossComputation(object):
         regression_targets = []
         for img_idx, (anchors_per_image, targets_per_image) in enumerate(zip(anchors, targets)):
             matched_targets = self.match_targets_to_anchors(
-                anchors_per_image, targets_per_image, self.copied_fields
+                img_idx, anchors_per_image, targets_per_image, self.copied_fields
             )
 
             matched_idxs = matched_targets.get_field("matched_idxs")
@@ -112,7 +124,23 @@ class RPNLossComputation(object):
             box_loss (Tensor
         """
         anchors = [cat_boxlist(anchors_per_image) for anchors_per_image in anchors]
+        for img_idx, anchors_per_img in enumerate(anchors):
+            get_tensor_saver().save(
+                tensor=anchors_per_img.bbox,
+                tensor_name="concated_anchors_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
         labels, regression_targets = self.prepare_targets(anchors, targets)
+
+        for img_idx, labels_per_img in enumerate(labels):
+            get_tensor_saver().save(
+                tensor=labels_per_img,
+                tensor_name="labels_img_{}".format(img_idx),
+                scope="rpn",
+                save_grad=False
+            )
+
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
 
         num_img = len(sampled_pos_inds)

@@ -6,6 +6,7 @@ from ..box_head.roi_box_feature_extractors import ResNet50Conv5ROIFeatureExtract
 from maskrcnn_benchmark.modeling import registry
 from maskrcnn_benchmark.modeling.poolers import Pooler
 from maskrcnn_benchmark.modeling.make_layers import make_conv3x3
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
 registry.ROI_MASK_FEATURE_EXTRACTORS.register(
@@ -57,10 +58,17 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
         self.out_channels = layer_features
 
     def forward(self, x, proposals):
-        x = self.pooler(x, proposals)
+        x = self.pooler(x, proposals, "mask_head")
 
         for layer_name in self.blocks:
             x = F.relu(getattr(self, layer_name)(x))
+            get_tensor_saver().save(
+                tensor=x,
+                tensor_name=layer_name,
+                scope="mask_head",
+                save_grad=True
+            )
+
 
         return x
 
