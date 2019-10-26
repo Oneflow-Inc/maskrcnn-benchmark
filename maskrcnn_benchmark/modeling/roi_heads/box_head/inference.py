@@ -8,6 +8,7 @@ from maskrcnn_benchmark.structures.boxlist_ops import boxlist_nms
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 from maskrcnn_benchmark.modeling.box_coder import BoxCoder
 
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 class PostProcessor(nn.Module):
     """
@@ -53,20 +54,47 @@ class PostProcessor(nn.Module):
                 the extra fields labels and scores
         """
         class_logits, box_regression = x
+
+        get_tensor_saver().save(
+            tensor=class_logits,
+            tensor_name='cls_logits',
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=box_regression,
+            tensor_name='box_regressions',
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+
+        for img_idx, rpn_proposals_per_img in enumerate(boxes):
+            get_tensor_saver().save(
+                tensor=rpn_proposals_per_img.bbox,
+                tensor_name='rpn_proposals_{}'.format(img_idx),
+                scope='test_box_head_post_processor',
+                save_grad=False,
+            )
+
         class_prob = F.softmax(class_logits, -1)
 
         # TODO think about a representation of batch of boxes
         image_shapes = [box.size for box in boxes]
+
+        for img_idx, image_shape in enumerate(image_shapes):
+            print("box_head post processor, image_size_{}: {}".format(img_idx, image_shape))
+
         boxes_per_image = [len(box) for box in boxes]
         concat_boxes = torch.cat([a.bbox for a in boxes], dim=0)
 
-        if self.cls_agnostic_bbox_reg:
-            box_regression = box_regression[:, -4:]
+        # if self.cls_agnostic_bbox_reg:
+        #     box_regression = box_regression[:, -4:]
+
         proposals = self.box_coder.decode(
             box_regression.view(sum(boxes_per_image), -1), concat_boxes
         )
-        if self.cls_agnostic_bbox_reg:
-            proposals = proposals.repeat(1, class_prob.shape[1])
+        # if self.cls_agnostic_bbox_reg:
+        #     proposals = proposals.repeat(1, class_prob.shape[1])
 
         num_classes = class_prob.shape[1]
 
@@ -74,12 +102,27 @@ class PostProcessor(nn.Module):
         class_prob = class_prob.split(boxes_per_image, dim=0)
 
         results = []
-        for prob, boxes_per_img, image_shape in zip(
-            class_prob, proposals, image_shapes
+        # prob: [R, 81]
+        # boxes_per_img: [R, 324]
+        # image_shape: [2,]
+        for img_idx, (prob, boxes_per_img, image_shape) in enumerate(
+            zip(class_prob, proposals, image_shapes)
         ):
+            get_tensor_saver().save(
+                tensor=prob,
+                tensor_name='cls_probs_{}'.format(img_idx),
+                scope='test_box_head_post_processor',
+                save_grad=False,
+            )
             boxlist = self.prepare_boxlist(boxes_per_img, prob, image_shape)
             boxlist = boxlist.clip_to_image(remove_empty=False)
-            boxlist = self.filter_results(boxlist, num_classes)
+            get_tensor_saver().save(
+                tensor=boxlist.bbox.reshape(-1, num_classes * 4),
+                tensor_name='proposals_{}'.format(img_idx),
+                scope='test_box_head_post_processor',
+                save_grad=False,
+            )
+            boxlist = self.filter_results(img_idx, boxlist, num_classes)
             results.append(boxlist)
         return results
 
@@ -102,12 +145,14 @@ class PostProcessor(nn.Module):
         boxlist.add_field("scores", scores)
         return boxlist
 
-    def filter_results(self, boxlist, num_classes):
+    def filter_results(self, img_idx, boxlist, num_classes):
         """Returns bounding-box detection results by thresholding on scores and
         applying non-maximum suppression (NMS).
         """
         # unwrap the boxlist to avoid additional overhead.
         # if we had multi-class NMS, we could perform this directly on the boxlist
+        # boxes: [R, 324]
+        # scroes: [R, 81]
         boxes = boxlist.bbox.reshape(-1, num_classes * 4)
         scores = boxlist.get_field("scores").reshape(-1, num_classes)
 
@@ -134,15 +179,57 @@ class PostProcessor(nn.Module):
         result = cat_boxlist(result)
         number_of_detections = len(result)
 
+        get_tensor_saver().save(
+            tensor=result.bbox,
+            tensor_name='concat_boxes_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=result.get_field("scores"),
+            tensor_name='concat_scores_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=result.get_field("labels"),
+            tensor_name='concat_labels_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+
         # Limit to max_per_image detections **over all classes**
-        if number_of_detections > self.detections_per_img > 0:
-            cls_scores = result.get_field("scores")
-            image_thresh, _ = torch.kthvalue(
-                cls_scores.cpu(), number_of_detections - self.detections_per_img + 1
-            )
-            keep = cls_scores >= image_thresh.item()
-            keep = torch.nonzero(keep).squeeze(1)
-            result = result[keep]
+        # if number_of_detections > self.detections_per_img > 0:
+        #     cls_scores = result.get_field("scores")
+        #     image_thresh, _ = torch.kthvalue(
+        #         cls_scores.cpu(), number_of_detections - self.detections_per_img + 1
+        #     )
+        #     keep = cls_scores >= image_thresh.item()
+        #     keep = torch.nonzero(keep).squeeze(1)
+        #     result = result[keep]
+        
+        _, keep = result.get_field("scores").topk(min(number_of_detections, self.detections_per_img), dim=0, sorted=True)
+        result = result[keep]
+
+        get_tensor_saver().save(
+            tensor=result.bbox,
+            tensor_name='final_boxes_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=result.get_field("scores"),
+            tensor_name='final_scores_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=result.get_field("labels"),
+            tensor_name='final_labels_{}'.format(img_idx),
+            scope='test_box_head_post_processor',
+            save_grad=False,
+        )
+
         return result
 
 
