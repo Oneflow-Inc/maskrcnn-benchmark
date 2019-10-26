@@ -74,37 +74,78 @@ def get_tensor_saver():
     return tensor_saver
 
 
+class MockDataMaker():
+    def __init__(self):
+        self.iter_ = 0
+        self.data_ = {}
+
+    def update_image(self, image_id, images):
+        print("iteration {} image_ids: {}".format(self.iter_, image_id))
+        self.data_["image_id"] = str(image_id)
+        self.data_["images"] = images.tensors.detach().numpy()
+
+    def update_target(self, targets):
+        self.data_["image_size"] = []
+        self.data_["gt_bbox"] = []
+        self.data_["gt_labels"] = []
+        self.data_["gt_segm_poly"] = []
+        self.data_["gt_segm_mask"] = []
+
+        for box_list in targets:
+            self.data_["gt_bbox"].append(box_list.bbox.detach().numpy())
+            self.data_["gt_labels"].append(
+                numpy.array(box_list.get_field("labels"), dtype=numpy.int32)
+            )
+            poly_list = box_list.get_field("masks").convert("poly").instances
+            img_polys = []
+            for poly_inst in poly_list:
+                obj_polys = []
+                for polys in poly_inst.polygons:
+                    obj_polys.append(numpy.array(polys, dtype=numpy.double))
+                img_polys.append(obj_polys)
+            self.data_["gt_segm_poly"].append(img_polys)
+            self.data_["gt_segm_mask"].append(
+                box_list.get_field("masks")
+                .get_mask_tensor()
+                .detach()
+                .numpy()
+                .astype(numpy.int8)
+            )
+            self.data_["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
+
+        self.data_["image_size"] = numpy.stack(self.data_["image_size"], axis=0)
+
+    def update_mask_targets(self, mask_targets):
+        self.data_["segm_mask_targets"] = mask_targets.cpu().detach().numpy()
+
+    def save(self):
+        dump_dir = os.path.join("train_dump", "iter_{}".format(self.iter_))
+        if not os.path.exists(dump_dir):
+            os.makedirs(dump_dir)
+
+        with open(os.path.join(dump_dir, "mock_data.pkl"), "wb") as f:
+            pk.dump(self.data_, f, protocol=2)
+
+    def step(self):
+        self.iter_ += 1
+
+
 def dump_data(iter, images, targets, image_id):
-    from maskrcnn_benchmark.modeling.roi_heads.mask_head.loss import (
-        project_masks_on_boxes,
-    )
+    get_mock_data_maker().update_image(image_id, images)
+    get_mock_data_maker().update_target(targets)
 
-    data = {}
-    data["image_id"] = str(image_id)
-    data["images"] = images.tensors.detach().numpy()
-    print(type(data["images"]))
-    print(data["images"].shape)
 
-    data["gt_bbox"] = []
-    data["gt_labels"] = []
-    data["gt_segm"] = []
-    data["image_size"] = []
-    for box_list in targets:
-        data["gt_bbox"].append(box_list.bbox.detach().numpy())
-        data["gt_labels"].append(
-            numpy.array(box_list.get_field("labels"), dtype=numpy.int32)
-        )
-        segm_mask = project_masks_on_boxes(
-            box_list.get_field("masks"), box_list, 28
-        )
-        data["gt_segm"].append(segm_mask.detach().numpy().astype(numpy.int8))
-        data["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
+mock_data_maker = None
 
-    data["image_size"] = numpy.stack(data["image_size"], axis=0)
 
-    dump_dir = os.path.join("train_dump", "iter_{}".format(iter))
-    if not os.path.exists(dump_dir):
-        os.makedirs(dump_dir)
+def create_mock_data_maker():
+    global mock_data_maker
+    mock_data_maker = MockDataMaker()
 
-    with open(os.path.join(dump_dir, "data.pkl"), "wb") as f:
-        pk.dump(data, f, protocol=2)
+
+def get_mock_data_maker():
+    global mock_data_maker
+    if not mock_data_maker:
+        raise Exception("mock_data_maker not created yet")
+
+    return mock_data_maker

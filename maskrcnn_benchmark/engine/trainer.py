@@ -16,7 +16,8 @@ import os
 
 from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
-from maskrcnn_benchmark.utils.tensor_saver import dump_data
+from maskrcnn_benchmark.utils.tensor_saver import create_mock_data_maker
+from maskrcnn_benchmark.utils.tensor_saver import get_mock_data_maker
 
 
 def reduce_loss_dict(loss_dict):
@@ -70,6 +71,7 @@ def do_train(
         iteration=start_iter,
         max_iter=start_iter + 1,
     )
+    create_mock_data_maker()
 
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
@@ -96,12 +98,16 @@ def do_train(
                 )
             )
 
-        dump_data(iteration, images, targets, image_id)
+        get_mock_data_maker().step()
+        get_mock_data_maker().update_image(image_id, images)
+        get_mock_data_maker().update_target(targets)
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
 
         loss_dict = model(images, targets)
+
+        get_mock_data_maker().save()
 
         losses = sum(loss for loss in loss_dict.values())
 

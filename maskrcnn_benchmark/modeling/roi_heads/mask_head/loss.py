@@ -6,6 +6,7 @@ from maskrcnn_benchmark.layers import smooth_l1_loss
 from maskrcnn_benchmark.modeling.matcher import Matcher
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.modeling.utils import cat
+from maskrcnn_benchmark.utils.tensor_saver import get_mock_data_maker
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
@@ -128,6 +129,7 @@ class MaskRCNNLossComputation(object):
         if mask_targets.numel() == 0:
             return mask_logits.sum() * 0
 
+        get_mock_data_maker().update_mask_targets(mask_targets)
         get_tensor_saver().save(
             tensor=mask_targets,
             tensor_name="mask_targets",
@@ -143,6 +145,12 @@ class MaskRCNNLossComputation(object):
 
         mask_loss = F.binary_cross_entropy_with_logits(
             mask_logits4loss, mask_targets
+        )
+        get_tensor_saver().save(
+            tensor=mask_loss,
+            tensor_name="mask_loss",
+            scope="mask_head",
+            save_grad=True
         )
         return mask_loss
 
