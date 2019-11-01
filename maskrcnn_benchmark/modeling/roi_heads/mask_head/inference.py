@@ -52,26 +52,6 @@ class MaskPostProcessor(nn.Module):
         index = torch.arange(num_masks, device=labels.device)
         mask_prob = mask_prob[index, labels][:, None]
 
-        for img_idx, box_list in enumerate(boxes):
-            get_tensor_saver().save(
-                tensor=box_list.bbox,
-                tensor_name="boxes_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=box_list.get_field("scores"),
-                tensor_name="scores_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=box_list.get_field("labels"),
-                tensor_name="labels_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-
         # torch.Size([79, 1, 28, 28])
         print(mask_prob.shape)
 
@@ -88,6 +68,35 @@ class MaskPostProcessor(nn.Module):
                 bbox.add_field(field, box.get_field(field))
             bbox.add_field("mask", prob)
             results.append(bbox)
+
+        for img_idx, boxlist in enumerate(results):
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            print(boxlist.size)
+            print(boxlist.mode)
+            get_tensor_saver().save(
+                tensor=boxlist.bbox,
+                tensor_name="boxes_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("scores"),
+                tensor_name="scores_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("labels"),
+                tensor_name="labels_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("mask"),
+                tensor_name="masks_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
 
         return results
 
