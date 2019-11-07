@@ -71,7 +71,7 @@ def do_train(
         iteration=start_iter,
         max_iter=start_iter + 1,
     )
-    create_mock_data_maker()
+    create_mock_data_maker(start_iter)
 
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
