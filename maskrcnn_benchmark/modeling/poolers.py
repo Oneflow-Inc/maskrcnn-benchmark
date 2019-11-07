@@ -134,7 +134,8 @@ class Pooler(nn.Module):
             idx_in_level = torch.nonzero(levels == level).squeeze(1)
             idx_in_level_list.append(idx_in_level)
             rois_per_level = rois[idx_in_level]
-            result[idx_in_level] = pooler(per_level_feature, rois_per_level).to(dtype)
+            result_idx_in_level = pooler(per_level_feature, rois_per_level).to(dtype)
+            result[idx_in_level] = result_idx_in_level
 
             get_tensor_saver().save(
                 tensor=idx_in_level,
@@ -156,7 +157,7 @@ class Pooler(nn.Module):
                 save_grad=False,
             )
             get_tensor_saver().save(
-                tensor=pooler(per_level_feature, rois_per_level).to(dtype),
+                tensor=result_idx_in_level,
                 tensor_name="{}_roi_feature_{}".format(head_name, level),
                 scope=head_name,
                 save_grad=True,
