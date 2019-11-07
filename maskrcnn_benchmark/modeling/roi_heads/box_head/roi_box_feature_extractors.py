@@ -90,7 +90,7 @@ class FPN2MLPFeatureExtractor(nn.Module):
         x = x.view(x.size(0), -1)
         get_tensor_saver().save(
             tensor=x,
-            tensor_name="fc6_in_diff",
+            tensor_name="fc6",
             scope="roi_head",
             save_grad=True
         )
