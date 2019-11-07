@@ -185,11 +185,12 @@ class RPNLossComputation(object):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
+        bbox_pred = box_regression[sampled_pos_inds]
         get_tensor_saver().save(
-            tensor=box_regression[sampled_pos_inds],
+            tensor=bbox_pred,
             tensor_name="CHECK_POINT_bbox_pred",
             scope="rpn",
-            save_grad=False
+            save_grad=True
         )
 
         get_tensor_saver().save(
@@ -200,7 +201,7 @@ class RPNLossComputation(object):
         )
 
         box_loss = smooth_l1_loss(
-            box_regression[sampled_pos_inds],
+            bbox_pred,
             regression_targets[sampled_pos_inds],
             beta=1.0 / 9,
             size_average=False,
@@ -213,15 +214,16 @@ class RPNLossComputation(object):
             save_grad=False
         )
 
+        cls_logit = objectness[sampled_inds]
         get_tensor_saver().save(
-            tensor=objectness[sampled_inds],
+            tensor=cls_logit,
             tensor_name="CHECK_POINT_rpn_cls_logits",
             scope="rpn",
-            save_grad=False
+            save_grad=True
         )
 
         objectness_loss = F.binary_cross_entropy_with_logits(
-            objectness[sampled_inds], labels[sampled_inds]
+            cls_logit, labels[sampled_inds]
         )
 
         return objectness_loss, box_loss
