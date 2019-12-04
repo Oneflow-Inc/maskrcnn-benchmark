@@ -11,6 +11,7 @@ from .loss import make_roi_mask_loss_evaluator
 
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
+
 def keep_only_positive_boxes(boxes):
     """
     Given a set of BoxList containing the `labels` field,
@@ -38,9 +39,12 @@ class ROIMaskHead(torch.nn.Module):
     def __init__(self, cfg, in_channels):
         super(ROIMaskHead, self).__init__()
         self.cfg = cfg.clone()
-        self.feature_extractor = make_roi_mask_feature_extractor(cfg, in_channels)
+        self.feature_extractor = make_roi_mask_feature_extractor(
+            cfg, in_channels
+        )
         self.predictor = make_roi_mask_predictor(
-            cfg, self.feature_extractor.out_channels)
+            cfg, self.feature_extractor.out_channels
+        )
         self.post_processor = make_roi_mask_post_processor(cfg)
         self.loss_evaluator = make_roi_mask_loss_evaluator(cfg)
 
@@ -64,7 +68,25 @@ class ROIMaskHead(torch.nn.Module):
             # during training, only focus on positive boxes
             all_proposals = proposals
             proposals, positive_inds = keep_only_positive_boxes(proposals)
-        if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+
+        for i, (proposal, pos_inds) in enumerate(zip(proposals, positive_inds)):
+            get_tensor_saver().save(
+                tensor=proposal.bbox,
+                tensor_name="pos_proposals",
+                scope="mask_head",
+                im_idx=i,
+            )
+            get_tensor_saver().save(
+                tensor=pos_inds.nonzero().squeeze(1),
+                tensor_name="pos_proposal_inds",
+                scope="mask_head",
+                im_idx=i,
+            )
+
+        if (
+            self.training
+            and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR
+        ):
             x = features
             x = x[torch.cat(positive_inds, dim=0)]
         else:
@@ -75,7 +97,7 @@ class ROIMaskHead(torch.nn.Module):
             tensor=mask_logits,
             tensor_name="mask_logits",
             scope="mask_head",
-            save_grad=True
+            save_grad=True,
         )
 
         if not self.training:
