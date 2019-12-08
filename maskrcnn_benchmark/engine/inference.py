@@ -32,7 +32,7 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
         else:
             get_tensor_saver().save(
                 tensor=images.tensors,
-                tensor_name='images',
+                tensor_name='images_{}'.format(idx),
                 save_grad=True,
             )
             image_size = []
@@ -40,7 +40,8 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
                 image_size.append(np.array(box_list.size, dtype=np.int32))
             image_size = np.stack(image_size, axis=0)
             image_size = np.concatenate([image_size[:, 1:2], image_size[:, 0:1]], axis=1)
-            np.save("image_size", image_size)
+            print("image_size, height, width")
+            print(image_size)
         images = images.to(device)
         with torch.no_grad():
             if timer:
@@ -140,6 +141,8 @@ def inference(
         expected_results_sigma_tol=expected_results_sigma_tol,
     )
 
+    print("y" * 1000)
+    print(len(dataset))
     return evaluate(dataset=dataset,
                     predictions=predictions,
                     output_folder=output_folder,
