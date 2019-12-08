@@ -26,6 +26,7 @@ class TensorSaver(object):
         save_grad=False,
         level=None,
         im_idx=None,
+        save_shape=True,
     ):
         if self.iteration > self.max_iteration:
             return
@@ -42,7 +43,8 @@ class TensorSaver(object):
             suffix = suffix + ".image{}".format(im_idx)
         if isinstance(level, int):
             suffix = suffix + ".layer{}".format(level)
-        suffix = suffix + "." + str(tuple(tensor.size()))
+        if save_shape:
+            suffix = suffix + "." + str(tuple(tensor.size()))
 
         save_path = os.path.join(save_dir, "{}{}".format(tensor_name, suffix))
         numpy.save(save_path, tensor.cpu().detach().numpy())

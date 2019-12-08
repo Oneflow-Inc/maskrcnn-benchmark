@@ -16,11 +16,13 @@ from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 import numpy as np
+import pickle as pkl
 
 def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
+    fake_image_list = []
     for idx, batch in enumerate(tqdm(data_loader)):
         images, targets, image_ids = batch
         if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
@@ -34,6 +36,7 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
                 tensor=images.tensors,
                 tensor_name='images_{}'.format(idx),
                 save_grad=True,
+                save_shape=False,
             )
             image_size = []
             for box_list in targets:
@@ -42,6 +45,13 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
             image_size = np.concatenate([image_size[:, 1:2], image_size[:, 0:1]], axis=1)
             print("image_size, height, width")
             print(image_size)
+
+            # gen fake image list
+            fake_image_list.append(images.tensors.detach().cpu().numpy())
+            if idx == len(data_loader) - 1:
+                print("dump fake image list...")
+                pkl.dump(fake_image_list, open("/tmp/fake_image_list.pkl", "wb"))
+
         images = images.to(device)
         with torch.no_grad():
             if timer:
