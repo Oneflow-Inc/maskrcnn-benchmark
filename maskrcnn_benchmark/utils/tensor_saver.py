@@ -2,6 +2,7 @@ import os
 import numpy
 import pickle as pk
 
+
 class TensorSaver(object):
     def __init__(self, training, base_dir, iteration, max_iter):
         self.training = training
@@ -76,9 +77,9 @@ def get_tensor_saver():
     return tensor_saver
 
 
-class MockDataMaker():
-    def __init__(self):
-        self.iter_ = 0
+class MockDataMaker:
+    def __init__(self, start_iter=1):
+        self.iter_ = start_iter
         self.data_ = {}
 
     def update_image(self, image_id, images):
@@ -113,7 +114,9 @@ class MockDataMaker():
                 .numpy()
                 .astype(numpy.int8)
             )
-            self.data_["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
+            self.data_["image_size"].append(
+                numpy.array(box_list.size, dtype=numpy.int32)
+            )
 
         self.data_["image_size"] = numpy.stack(self.data_["image_size"], axis=0)
 
@@ -140,9 +143,9 @@ def dump_data(iter, images, targets, image_id):
 mock_data_maker = None
 
 
-def create_mock_data_maker():
+def create_mock_data_maker(iter):
     global mock_data_maker
-    mock_data_maker = MockDataMaker()
+    mock_data_maker = MockDataMaker(iter)
 
 
 def get_mock_data_maker():

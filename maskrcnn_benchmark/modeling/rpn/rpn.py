@@ -193,7 +193,7 @@ class RPNModule(torch.nn.Module):
 
         for i, boxes_per_im in enumerate(boxes):
             get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
-        
+
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
         )
