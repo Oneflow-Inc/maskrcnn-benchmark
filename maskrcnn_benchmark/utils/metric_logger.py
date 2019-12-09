@@ -10,7 +10,7 @@ class SmoothedValue(object):
     window or the global series average.
     """
 
-    def __init__(self, window_size=20):
+    def __init__(self, window_size=1):
         self.deque = deque(maxlen=window_size)
         self.series = []
         self.total = 0.0
