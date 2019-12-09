@@ -151,8 +151,6 @@ def inference(
         expected_results_sigma_tol=expected_results_sigma_tol,
     )
 
-    print("y" * 1000)
-    print(len(dataset))
     return evaluate(dataset=dataset,
                     predictions=predictions,
                     output_folder=output_folder,
