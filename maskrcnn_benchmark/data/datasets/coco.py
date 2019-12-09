@@ -121,12 +121,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        print(
-            "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
-                idx, image_id, len(anno)
-            )
-        )
-        # print("coco __getitem__ anno example: ", anno[0])
         return img, target, image_id
 
     def get_img_info(self, index):
