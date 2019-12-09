@@ -24,9 +24,9 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
                 milestones,
             )
 
-        if warmup_method not in ("constant", "linear"):
+        if warmup_method not in ("constant", "linear", "none"):
             raise ValueError(
-                "Only 'constant' or 'linear' warmup_method accepted"
+                "Only 'constant' or 'linear' or 'none' warmup_method accepted"
                 "got {}".format(warmup_method)
             )
         self.milestones = milestones

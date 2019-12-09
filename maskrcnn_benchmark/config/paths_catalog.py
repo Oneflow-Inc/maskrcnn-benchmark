@@ -23,6 +23,18 @@ class DatasetCatalog(object):
             "img_dir": "mscoco_2017/val2017",
             "ann_file": "mscoco_2017/annotations/sample_10_instances_val2017.json"
         },
+        "coco_20_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_20_instances_val2017.json"
+        },
+        "coco_50_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_50_instances_val2017.json"
+        },
+        "coco_100_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_100_instances_val2017.json"
+        },
         "coco_2017_train": {
             "img_dir": "mscoco_2017/train2017",
             "ann_file": "mscoco_2017/annotations/instances_train2017.json"

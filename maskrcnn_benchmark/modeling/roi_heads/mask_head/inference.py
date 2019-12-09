@@ -5,6 +5,7 @@ from torch import nn
 from maskrcnn_benchmark.layers.misc import interpolate
 
 from maskrcnn_benchmark.structures.bounding_box import BoxList
+from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
 # TODO check if want to return a single BoxList or a composite
@@ -37,6 +38,13 @@ class MaskPostProcessor(nn.Module):
         """
         mask_prob = x.sigmoid()
 
+        get_tensor_saver().save(
+            tensor=mask_prob,
+            tensor_name="mask_prob",
+            scope="mask_head",
+            save_grad=False
+        )
+
         # select masks coresponding to the predicted classes
         num_masks = x.shape[0]
         labels = [bbox.get_field("labels") for bbox in boxes]
@@ -57,6 +65,32 @@ class MaskPostProcessor(nn.Module):
                 bbox.add_field(field, box.get_field(field))
             bbox.add_field("mask", prob)
             results.append(bbox)
+
+        for img_idx, boxlist in enumerate(results):
+            get_tensor_saver().save(
+                tensor=boxlist.bbox,
+                tensor_name="boxes_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("scores"),
+                tensor_name="scores_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("labels"),
+                tensor_name="labels_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
+            get_tensor_saver().save(
+                tensor=boxlist.get_field("mask"),
+                tensor_name="masks_{}".format(img_idx),
+                scope="complete_eval_net",
+                save_grad=False
+            )
 
         return results
 
@@ -116,6 +150,8 @@ def expand_masks(mask, padding):
     return padded_mask, scale
 
 
+# mask: (1, 28, 28)
+# box: (4,)
 def paste_mask_in_image(mask, box, im_h, im_w, thresh=0.5, padding=1):
     # Need to work on the CPU, where fp16 isn't supported - cast to float to avoid this
     mask = mask.float()
@@ -152,7 +188,7 @@ def paste_mask_in_image(mask, box, im_h, im_w, thresh=0.5, padding=1):
     x_1 = min(box[2] + 1, im_w)
     y_0 = max(box[1], 0)
     y_1 = min(box[3] + 1, im_h)
-
+    
     im_mask[y_0:y_1, x_0:x_1] = mask[
         (y_0 - box[1]) : (y_1 - box[1]), (x_0 - box[0]) : (x_1 - box[0])
     ]
@@ -169,9 +205,30 @@ class Masker(object):
         self.threshold = threshold
         self.padding = padding
 
+    # masks: (R, 1, 28, 28)
+    # boxes: boxes_list of length R
     def forward_single_image(self, masks, boxes):
+        get_tensor_saver().save(
+            tensor=torch.squeeze(masks, 1),
+            tensor_name="mask_prob",
+            scope="test_masker",
+            save_grad=False
+        )
+        get_tensor_saver().save(
+            tensor=boxes.bbox,
+            tensor_name="box",
+            scope="test_masker",
+            save_grad=False
+        )
         boxes = boxes.convert("xyxy")
         im_w, im_h = boxes.size
+        image_size = torch.tensor(np.array([im_h, im_w]))
+        get_tensor_saver().save(
+            tensor=image_size,
+            tensor_name="image_size",
+            scope="test_masker",
+            save_grad=False
+        )
         res = [
             paste_mask_in_image(mask[0], box, im_h, im_w, self.threshold, self.padding)
             for mask, box in zip(masks, boxes.bbox)
@@ -180,6 +237,14 @@ class Masker(object):
             res = torch.stack(res, dim=0)[:, None]
         else:
             res = masks.new_empty((0, 1, masks.shape[-2], masks.shape[-1]))
+        
+        get_tensor_saver().save(
+            tensor=torch.squeeze(res, 1),
+            tensor_name="out",
+            scope="test_masker",
+            save_grad=False
+        )
+
         return res
 
     def __call__(self, masks, boxes):

@@ -2,6 +2,7 @@ import os
 import numpy
 import pickle as pk
 
+
 class TensorSaver(object):
     def __init__(self, training, base_dir, iteration, max_iter):
         self.training = training
@@ -26,6 +27,7 @@ class TensorSaver(object):
         save_grad=False,
         level=None,
         im_idx=None,
+        save_shape=True,
     ):
         if self.iteration > self.max_iteration:
             return
@@ -42,7 +44,8 @@ class TensorSaver(object):
             suffix = suffix + ".image{}".format(im_idx)
         if isinstance(level, int):
             suffix = suffix + ".layer{}".format(level)
-        suffix = suffix + "." + str(tuple(tensor.size()))
+        if save_shape:
+            suffix = suffix + "." + str(tuple(tensor.size()))
 
         save_path = os.path.join(save_dir, "{}{}".format(tensor_name, suffix))
         numpy.save(save_path, tensor.cpu().detach().numpy())
@@ -58,12 +61,30 @@ class TensorSaver(object):
             )
 
 
+class OfflineTensorSaver(TensorSaver):
+    def save(
+        self,
+        tensor,
+        tensor_name,
+        scope=None,
+        save_grad=False,
+        level=None,
+        im_idx=None,
+    ):
+        pass
+
+
 tensor_saver = None
 
 
-def create_tensor_saver(training, base_dir, iteration=0, max_iter=None):
+def create_tensor_saver(
+    training, base_dir, iteration=0, max_iter=None, offline=False
+):
     global tensor_saver
-    tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
+    if offline:
+        tensor_saver = OfflineTensorSaver()
+    else:
+        tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
 
 
 def get_tensor_saver():
@@ -74,9 +95,9 @@ def get_tensor_saver():
     return tensor_saver
 
 
-class MockDataMaker():
-    def __init__(self):
-        self.iter_ = 0
+class MockDataMaker:
+    def __init__(self, start_iter=1):
+        self.iter_ = start_iter
         self.data_ = {}
 
     def update_image(self, image_id, images):
@@ -111,7 +132,9 @@ class MockDataMaker():
                 .numpy()
                 .astype(numpy.int8)
             )
-            self.data_["image_size"].append(numpy.array(box_list.size, dtype=numpy.int32))
+            self.data_["image_size"].append(
+                numpy.array(box_list.size, dtype=numpy.int32)
+            )
 
         self.data_["image_size"] = numpy.stack(self.data_["image_size"], axis=0)
 
@@ -138,9 +161,9 @@ def dump_data(iter, images, targets, image_id):
 mock_data_maker = None
 
 
-def create_mock_data_maker():
+def create_mock_data_maker(iter):
     global mock_data_maker
-    mock_data_maker = MockDataMaker()
+    mock_data_maker = MockDataMaker(iter)
 
 
 def get_mock_data_maker():

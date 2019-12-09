@@ -10,7 +10,9 @@ from maskrcnn_benchmark.utils.tensor_saver import get_mock_data_maker
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 
 
-def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
+def project_masks_on_boxes(
+    segmentation_masks, proposals, discretization_size, im_idx
+):
     """
     Given segmentation masks and the bounding boxes corresponding
     to the location of the masks in the image, this function
@@ -32,12 +34,36 @@ def project_masks_on_boxes(segmentation_masks, proposals, discretization_size):
 
     # FIXME: CPU computation bottleneck, this should be parallelized
     proposals = proposals.bbox.to(torch.device("cpu"))
-    for segmentation_mask, proposal in zip(segmentation_masks, proposals):
+    for i, (segmentation_mask, proposal) in enumerate(
+        zip(segmentation_masks, proposals)
+    ):
+        segmentation_mask = segmentation_mask.convert("mask")
+        get_tensor_saver().save(
+            tensor=segmentation_mask.get_mask_tensor(),
+            tensor_name="segmentation_mask_{}".format(i),
+            scope="mask",
+            im_idx=im_idx,
+            save_grad=False,
+        )
+        get_tensor_saver().save(
+            tensor=proposal,
+            tensor_name="segmentation_proposal_{}".format(i),
+            scope="mask",
+            im_idx=im_idx,
+            save_grad=False,
+        )
         # crop the masks, resize them to the desired resolution and
         # then convert them to the tensor representation.
         cropped_mask = segmentation_mask.crop(proposal)
         scaled_mask = cropped_mask.resize((M, M))
         mask = scaled_mask.get_mask_tensor()
+        get_tensor_saver().save(
+            tensor=mask,
+            tensor_name="segmentation_resized_mask_{}".format(i),
+            scope="mask",
+            im_idx=im_idx,
+            save_grad=False,
+        )
         masks.append(mask)
     if len(masks) == 0:
         return torch.empty(0, dtype=torch.float32, device=device)
@@ -70,7 +96,9 @@ class MaskRCNNLossComputation(object):
     def prepare_targets(self, proposals, targets):
         labels = []
         masks = []
-        for proposals_per_image, targets_per_image in zip(proposals, targets):
+        for im_i, (proposals_per_image, targets_per_image) in enumerate(
+            zip(proposals, targets)
+        ):
             matched_targets = self.match_targets_to_proposals(
                 proposals_per_image, targets_per_image
             )
@@ -93,7 +121,10 @@ class MaskRCNNLossComputation(object):
             positive_proposals = proposals_per_image[positive_inds]
 
             masks_per_image = project_masks_on_boxes(
-                segmentation_masks, positive_proposals, self.discretization_size
+                segmentation_masks,
+                positive_proposals,
+                self.discretization_size,
+                im_i,
             )
 
             labels.append(labels_per_image)
@@ -115,9 +146,7 @@ class MaskRCNNLossComputation(object):
 
         labels = cat(labels, dim=0)
         get_tensor_saver().save(
-            tensor=labels,
-            tensor_name="concat_gt_labels",
-            scope="mask_head",
+            tensor=labels, tensor_name="concat_gt_labels", scope="mask_head"
         )
         mask_targets = cat(mask_targets, dim=0)
 
@@ -131,16 +160,14 @@ class MaskRCNNLossComputation(object):
 
         get_mock_data_maker().update_mask_targets(mask_targets)
         get_tensor_saver().save(
-            tensor=mask_targets,
-            tensor_name="mask_targets",
-            scope="mask_head",
+            tensor=mask_targets, tensor_name="mask_targets", scope="mask_head"
         )
         mask_logits4loss = mask_logits[positive_inds, labels_pos]
         get_tensor_saver().save(
             tensor=mask_logits4loss,
             tensor_name="mask_logits4loss",
             scope="mask_head",
-            save_grad=True
+            save_grad=True,
         )
 
         mask_loss = F.binary_cross_entropy_with_logits(

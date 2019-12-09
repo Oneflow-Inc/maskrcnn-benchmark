@@ -13,6 +13,7 @@ from apex import amp
 
 import numpy as np
 import os
+import pickle as pkl
 
 from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
@@ -69,9 +70,9 @@ def do_train(
         training=True,
         base_dir="train_dump",
         iteration=start_iter,
-        max_iter=start_iter + 1,
+        max_iter=start_iter + 10,
     )
-    create_mock_data_maker()
+    create_mock_data_maker(start_iter)
 
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
@@ -96,6 +97,10 @@ def do_train(
                 "Load fake image data from {} at itor {}".format(
                     fake_image_path, iteration
                 )
+            )
+        else:
+            get_tensor_saver().save(
+                tensor=images.tensors.permute(0, 2, 3, 1), tensor_name="image"
             )
 
         get_mock_data_maker().step()
@@ -155,6 +160,27 @@ def do_train(
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
         if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
+
+            if cfg.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER:
+                state_dict = optimizer.state_dict()
+                model_name2momentum_buffer = {}
+                for key, value in model.named_parameters():
+                    if value.requires_grad:
+                        momentum_buffer = (
+                            state_dict["state"][id(value)]["momentum_buffer"]
+                            .cpu()
+                            .detach()
+                            .numpy()
+                        )
+                        model_name2momentum_buffer[key] = momentum_buffer
+
+                pkl.dump(
+                    model_name2momentum_buffer,
+                    open(
+                        "model_final" + ".model_name2momentum_buffer.pkl", "wb"
+                    ),
+                    protocol=2,
+                )
 
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))

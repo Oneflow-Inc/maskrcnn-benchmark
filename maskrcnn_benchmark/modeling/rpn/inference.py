@@ -87,7 +87,15 @@ class RPNPostProcessor(torch.nn.Module):
 
         # put in the same format as anchors
         objectness = permute_and_flatten(objectness, N, A, 1, H, W).view(N, -1)
-        objectness = objectness.sigmoid()
+        # objectness = objectness.sigmoid()
+
+        get_tensor_saver().save(
+            tensor=objectness,
+            tensor_name="objectness",
+            scope="rpn",
+            save_grad=False,
+            level=level
+        )
 
         box_regression = permute_and_flatten(box_regression, N, A, 4, H, W)
 
@@ -96,13 +104,13 @@ class RPNPostProcessor(torch.nn.Module):
         pre_nms_top_n = min(self.pre_nms_top_n, num_anchors)
         objectness, topk_idx = objectness.topk(pre_nms_top_n, dim=1, sorted=True)
         # get_tensor_saver().save(
-        #     tensor=topk_idx[0,:],
+        #     tensor=topk_idx[0, :],
         #     tensor_name="topk_idx_img_{}_layer_{}".format(0, level),
         #     scope="rpn",
         #     save_grad=False
         # )
         # get_tensor_saver().save(
-        #     tensor=topk_idx[1,:],
+        #     tensor=topk_idx[1, :],
         #     tensor_name="topk_idx_img_{}_layer_{}".format(1, level),
         #     scope="rpn",
         #     save_grad=False
@@ -150,11 +158,15 @@ class RPNPostProcessor(torch.nn.Module):
         for im_i, (proposal, score, im_shape) in enumerate(zip(proposals, objectness, image_shapes)):
             boxlist = BoxList(proposal, im_shape, mode="xyxy")
             boxlist.add_field("objectness", score)
+            get_tensor_saver().save(torch.tensor(boxlist.size), 'image_size', 'rpn', im_idx=im_i)
             boxlist = boxlist.clip_to_image(remove_empty=False)
+            get_tensor_saver().save(boxlist.bbox, 'clipped_boxes', 'rpn', level=level, im_idx=im_i)
             boxlist = remove_small_boxes(boxlist, self.min_size)
             get_tensor_saver().save(boxlist.bbox, 'after_remove_small_boxes', 'rpn', level=level, im_idx=im_i)
+
             def dump_callback(keep):
                 get_tensor_saver().save(keep, 'nms_indices', 'rpn', level=level, im_idx=im_i)
+
             boxlist = boxlist_nms(
                 boxlist,
                 self.nms_thresh,

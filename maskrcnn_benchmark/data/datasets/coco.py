@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
 import torchvision
+import numpy as np
 
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
@@ -48,11 +49,11 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         super(COCODataset, self).__init__(root, ann_file)
 
         # remove imgs with category_id > 80
-        to_remove = set([])
-        for cat_id, _ in self.coco.cats.items():
-            if cat_id > 80:
-                to_remove |= set(self.coco.catToImgs[cat_id])
-        self.ids = list(set(self.ids) - to_remove)
+        # to_remove = set([])
+        # for cat_id, _ in self.coco.cats.items():
+        #     if cat_id > 80:
+        #         to_remove |= set(self.coco.catToImgs[cat_id])
+        # self.ids = list(set(self.ids) - to_remove)
 
         # sort indices for reproducible results
         self.ids = sorted(self.ids)
@@ -66,6 +67,11 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
                 if has_valid_annotation(anno):
                     ids.append(img_id)
             self.ids = ids
+
+        print("z" * 1000)
+        print(len(self.ids))
+        print(type(self.ids))
+        print(self.ids)
 
         self.json_category_id_to_contiguous_id = {
             v: i + 1 for i, v in enumerate(self.coco.getCatIds())
@@ -81,6 +87,14 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
         image_id = anno[0]["image_id"]
+
+        if idx < 1:
+            print("save image {}, size {} to png".format(image_id, img.size))
+            torchvision.utils.save_image(
+                torchvision.transforms.functional.to_tensor(img),
+                "{:012d}.png".format(image_id),
+            )
+            np.save("raw_img_{}".format(image_id), torchvision.transforms.functional.to_tensor(img))
 
         # filter crowd annotations
         # TODO might be better to add an extra field
@@ -112,12 +126,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        print(
-            "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
-                idx, image_id, len(anno)
-            )
-        )
-        # print("coco __getitem__ anno example: ", anno[0])
         return img, target, image_id
 
     def get_img_info(self, index):

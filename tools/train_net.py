@@ -5,10 +5,13 @@ Basic training script for PyTorch
 
 # Set up custom environment before nearly anything else is imported
 # NOTE: this should be the first import (no not reorder)
-from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
+from maskrcnn_benchmark.utils.env import (
+    setup_environment,
+)  # noqa F401 isort:skip
 
 import argparse
 import os
+import pickle as pkl
 
 import torch
 from maskrcnn_benchmark.config import cfg
@@ -30,7 +33,7 @@ from maskrcnn_benchmark.utils.miscellaneous import mkdir
 try:
     from apex import amp
 except ImportError:
-    raise ImportError('Use APEX for multi-precision via apex.amp')
+    raise ImportError("Use APEX for multi-precision via apex.amp")
 
 
 def train(cfg, local_rank, distributed):
@@ -43,12 +46,14 @@ def train(cfg, local_rank, distributed):
 
     # Initialize mixed-precision training
     use_mixed_precision = cfg.DTYPE == "float16"
-    amp_opt_level = 'O1' if use_mixed_precision else 'O0'
+    amp_opt_level = "O1" if use_mixed_precision else "O0"
     model, optimizer = amp.initialize(model, optimizer, opt_level=amp_opt_level)
 
     if distributed:
         model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[local_rank], output_device=local_rank,
+            model,
+            device_ids=[local_rank],
+            output_device=local_rank,
             # this should be removed if we update BatchNorm stats
             broadcast_buffers=False,
         )
@@ -64,6 +69,30 @@ def train(cfg, local_rank, distributed):
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
+
+    if cfg.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER:
+        state_dict = optimizer.state_dict()
+        model_name2momentum_buffer = {}
+
+        for key, value in model.named_parameters():
+            if value.requires_grad:
+                momentum_buffer = (
+                    state_dict["state"][id(value)]["momentum_buffer"]
+                    .cpu()
+                    .detach()
+                    .numpy()
+                )
+                model_name2momentum_buffer[key] = momentum_buffer
+
+        pkl.dump(
+            model_name2momentum_buffer,
+            open(
+                os.path.basename(cfg.MODEL.WEIGHT)
+                + ".model_name2momentum_buffer.pkl",
+                "wb",
+            ),
+            protocol=2,
+        )
 
     data_loader = make_data_loader(
         cfg,
@@ -102,11 +131,17 @@ def run_test(cfg, model, distributed):
     dataset_names = cfg.DATASETS.TEST
     if cfg.OUTPUT_DIR:
         for idx, dataset_name in enumerate(dataset_names):
-            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
+            output_folder = os.path.join(
+                cfg.OUTPUT_DIR, "inference", dataset_name
+            )
             mkdir(output_folder)
             output_folders[idx] = output_folder
-    data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
-    for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
+    data_loaders_val = make_data_loader(
+        cfg, is_train=False, is_distributed=distributed
+    )
+    for output_folder, dataset_name, data_loader_val in zip(
+        output_folders, dataset_names, data_loaders_val
+    ):
         inference(
             model,
             data_loader_val,
@@ -122,7 +157,9 @@ def run_test(cfg, model, distributed):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
+    parser = argparse.ArgumentParser(
+        description="PyTorch Object Detection Training"
+    )
     parser.add_argument(
         "--config-file",
         default="",
@@ -146,7 +183,9 @@ def main():
 
     args = parser.parse_args()
 
-    num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+    num_gpus = (
+        int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+    )
     args.distributed = num_gpus > 1
 
     if args.distributed:
