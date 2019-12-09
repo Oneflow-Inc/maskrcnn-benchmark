@@ -1,6 +1,7 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  # WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  WEIGHT: "/model_zoo/detection/e2e_mask_rcnn_R_50_FPN_1x.pth"
   BACKBONE:
     CONV_BODY: "R-50-FPN"
   RESNETS:
@@ -31,7 +32,7 @@ MODEL:
   MASK_ON: True
 DATASETS:
   TRAIN: ("coco_2014_train", "coco_2014_valminusminival")
-  TEST: ("coco_2014_minival",)
+  TEST: ("coco_2017_val",)
 DATALOADER:
   SIZE_DIVISIBILITY: 32
 SOLVER:

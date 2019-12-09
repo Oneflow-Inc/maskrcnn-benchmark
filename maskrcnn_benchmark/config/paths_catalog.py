@@ -5,15 +5,43 @@ import os
 
 
 class DatasetCatalog(object):
-    DATA_DIR = "datasets"
+    DATA_DIR = "/dataset"
     DATASETS = {
+        "coco_1_image_train": {
+            "img_dir": "mscoco_2017/train2017",
+            "ann_file": "mscoco_2017/annotations/sample_1_instances_train2017.json"
+        },
+        "coco_1_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_1_instances_val2017.json"
+        },
+        "coco_2_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_2_instances_val2017.json"
+        },
+        "coco_10_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_10_instances_val2017.json"
+        },
+        "coco_20_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_20_instances_val2017.json"
+        },
+        "coco_50_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_50_instances_val2017.json"
+        },
+        "coco_100_image_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_100_instances_val2017.json"
+        },
         "coco_2017_train": {
-            "img_dir": "coco/train2017",
-            "ann_file": "coco/annotations/instances_train2017.json"
+            "img_dir": "mscoco_2017/train2017",
+            "ann_file": "mscoco_2017/annotations/instances_train2017.json"
         },
         "coco_2017_val": {
-            "img_dir": "coco/val2017",
-            "ann_file": "coco/annotations/instances_val2017.json"
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/instances_val2017.json"
         },
         "coco_2014_train": {
             "img_dir": "coco/train2014",
