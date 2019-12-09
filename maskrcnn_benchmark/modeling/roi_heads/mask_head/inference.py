@@ -52,9 +52,6 @@ class MaskPostProcessor(nn.Module):
         index = torch.arange(num_masks, device=labels.device)
         mask_prob = mask_prob[index, labels][:, None]
 
-        # torch.Size([79, 1, 28, 28])
-        print(mask_prob.shape)
-
         boxes_per_image = [len(box) for box in boxes]
         mask_prob = mask_prob.split(boxes_per_image, dim=0)
 
@@ -70,9 +67,6 @@ class MaskPostProcessor(nn.Module):
             results.append(bbox)
 
         for img_idx, boxlist in enumerate(results):
-            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            print(boxlist.size)
-            print(boxlist.mode)
             get_tensor_saver().save(
                 tensor=boxlist.bbox,
                 tensor_name="boxes_{}".format(img_idx),

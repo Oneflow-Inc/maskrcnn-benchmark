@@ -69,19 +69,19 @@ class ROIMaskHead(torch.nn.Module):
             all_proposals = proposals
             proposals, positive_inds = keep_only_positive_boxes(proposals)
 
-        for i, (proposal, pos_inds) in enumerate(zip(proposals, positive_inds)):
-            get_tensor_saver().save(
-                tensor=proposal.bbox,
-                tensor_name="pos_proposals",
-                scope="mask_head",
-                im_idx=i,
-            )
-            get_tensor_saver().save(
-                tensor=pos_inds.nonzero().squeeze(1),
-                tensor_name="pos_proposal_inds",
-                scope="mask_head",
-                im_idx=i,
-            )
+        # for i, (proposal, pos_inds) in enumerate(zip(proposals, positive_inds)):
+        #     get_tensor_saver().save(
+        #         tensor=proposal.bbox,
+        #         tensor_name="pos_proposals",
+        #         scope="mask_head",
+        #         im_idx=i,
+        #     )
+        #     get_tensor_saver().save(
+        #         tensor=pos_inds.nonzero().squeeze(1),
+        #         tensor_name="pos_proposal_inds",
+        #         scope="mask_head",
+        #         im_idx=i,
+        #     )
 
         if (
             self.training

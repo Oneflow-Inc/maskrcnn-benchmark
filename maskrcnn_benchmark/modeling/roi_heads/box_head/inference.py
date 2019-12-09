@@ -81,9 +81,6 @@ class PostProcessor(nn.Module):
         # TODO think about a representation of batch of boxes
         image_shapes = [box.size for box in boxes]
 
-        for img_idx, image_shape in enumerate(image_shapes):
-            print("box_head post processor, image_size_{}: {}".format(img_idx, image_shape))
-
         boxes_per_image = [len(box) for box in boxes]
         concat_boxes = torch.cat([a.bbox for a in boxes], dim=0)
 
