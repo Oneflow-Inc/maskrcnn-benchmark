@@ -93,12 +93,12 @@ class ROIMaskHead(torch.nn.Module):
             x = self.feature_extractor(features, proposals)
         mask_logits = self.predictor(x)
 
-        get_tensor_saver().save(
-            tensor=mask_logits,
-            tensor_name="mask_logits",
-            scope="mask_head",
-            save_grad=True,
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask_logits,
+        #     tensor_name="mask_logits",
+        #     scope="mask_head",
+        #     save_grad=True,
+        # )
 
         if not self.training:
             result = self.post_processor(mask_logits, proposals)

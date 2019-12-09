@@ -59,12 +59,12 @@ class FastRCNNLossComputation(object):
             )
             matched_idxs = matched_targets.get_field("matched_idxs")
 
-            get_tensor_saver().save(
-                tensor=matched_idxs,
-                tensor_name="matched_idxs_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
+            # get_tensor_saver().save(
+            #     tensor=matched_idxs,
+            #     tensor_name="matched_idxs_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
 
             labels_per_image = matched_targets.get_field("labels")
             labels_per_image = labels_per_image.to(dtype=torch.int64)
@@ -116,18 +116,18 @@ class FastRCNNLossComputation(object):
         for img_idx, (pos_inds_img, neg_inds_img) in enumerate(
             zip(sampled_pos_inds, sampled_neg_inds)
         ):
-            get_tensor_saver().save(
-                tensor=torch.nonzero(pos_inds_img).squeeze(1),
-                tensor_name="sampled_pos_inds_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
-            get_tensor_saver().save(
-                tensor=torch.nonzero(neg_inds_img).squeeze(1),
-                tensor_name="sampled_neg_inds_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
+            # get_tensor_saver().save(
+            #     tensor=torch.nonzero(pos_inds_img).squeeze(1),
+            #     tensor_name="sampled_pos_inds_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
+            # get_tensor_saver().save(
+            #     tensor=torch.nonzero(neg_inds_img).squeeze(1),
+            #     tensor_name="sampled_neg_inds_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
             # img_sampled_inds = torch.nonzero(pos_inds_img | neg_inds_img).squeeze(1)
             # Equivalent to previous statement except in order
             img_sampled_inds = cat(
@@ -140,24 +140,24 @@ class FastRCNNLossComputation(object):
             proposals_per_image = proposals[img_idx][img_sampled_inds]
             proposals[img_idx] = proposals_per_image
 
-            get_tensor_saver().save(
-                tensor=proposals_per_image.bbox,
-                tensor_name="sampled_pos_neg_proposals_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
-            get_tensor_saver().save(
-                tensor=proposals_per_image.get_field("regression_targets"),
-                tensor_name="sampled_pos_neg_bbox_regression_targets_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
-            get_tensor_saver().save(
-                tensor=proposals_per_image.get_field("labels"),
-                tensor_name="sampled_pos_neg_cls_labels_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False,
-            )
+            # get_tensor_saver().save(
+            #     tensor=proposals_per_image.bbox,
+            #     tensor_name="sampled_pos_neg_proposals_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
+            # get_tensor_saver().save(
+            #     tensor=proposals_per_image.get_field("regression_targets"),
+            #     tensor_name="sampled_pos_neg_bbox_regression_targets_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
+            # get_tensor_saver().save(
+            #     tensor=proposals_per_image.get_field("labels"),
+            #     tensor_name="sampled_pos_neg_cls_labels_{}".format(img_idx),
+            #     scope="roi_head",
+            #     save_grad=False,
+            # )
 
         self._proposals = proposals
         return proposals
@@ -190,19 +190,19 @@ class FastRCNNLossComputation(object):
             [proposal.get_field("regression_targets") for proposal in proposals], dim=0
         )
 
-        get_tensor_saver().save(
-            tensor=regression_targets,
-            tensor_name="regression_targets",
-            scope="roi_head",
-            save_grad=False,
-        )
+        # get_tensor_saver().save(
+        #     tensor=regression_targets,
+        #     tensor_name="regression_targets",
+        #     scope="roi_head",
+        #     save_grad=False,
+        # )
 
-        get_tensor_saver().save(
-            tensor=labels,
-            tensor_name="labels",
-            scope="roi_head",
-            save_grad=False,
-        )
+        # get_tensor_saver().save(
+        #     tensor=labels,
+        #     tensor_name="labels",
+        #     scope="roi_head",
+        #     save_grad=False,
+        # )
 
         classification_loss = F.cross_entropy(class_logits, labels)
 

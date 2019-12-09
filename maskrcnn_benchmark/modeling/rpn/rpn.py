@@ -102,12 +102,12 @@ class RPNHead(nn.Module):
         bbox_reg = []
         for layer_idx, feature in enumerate(x):
             t = F.relu(self.conv(feature))
-            get_tensor_saver().save(
-                tensor=t,
-                tensor_name="CHECK_POINT_rpn-head_conv_out_layer_{}".format(layer_idx),
-                scope="rpn/head",
-                save_grad=True
-            )
+            # get_tensor_saver().save(
+            #     tensor=t,
+            #     tensor_name="CHECK_POINT_rpn-head_conv_out_layer_{}".format(layer_idx),
+            #     scope="rpn/head",
+            #     save_grad=True
+            # )
             logits.append(self.cls_logits(t))
             bbox_reg.append(self.bbox_pred(t))
         return logits, bbox_reg
@@ -161,15 +161,15 @@ class RPNModule(torch.nn.Module):
         """
         objectness, rpn_box_regression = self.head(features)
 
-        for i, (logits_per_layer, bbox_reg_per_layer) in enumerate(zip(objectness, rpn_box_regression), 1):
-            get_tensor_saver().save(logits_per_layer, 'CHECK_POINT_rpn_head_cls_logits', 'rpn/head', True, i)
-            get_tensor_saver().save(bbox_reg_per_layer, 'CHECK_POINT_rpn_head_bbox_reg', 'rpn/head', True, i)
+        # for i, (logits_per_layer, bbox_reg_per_layer) in enumerate(zip(objectness, rpn_box_regression), 1):
+        #     get_tensor_saver().save(logits_per_layer, 'CHECK_POINT_rpn_head_cls_logits', 'rpn/head', True, i)
+        #     get_tensor_saver().save(bbox_reg_per_layer, 'CHECK_POINT_rpn_head_bbox_reg', 'rpn/head', True, i)
 
         anchors = self.anchor_generator(images, features)
 
-        for i, anchors_per_image in enumerate(anchors):
-            for l, anchors_per_layer in enumerate(anchors_per_image, 1):
-                get_tensor_saver().save(anchors_per_layer.bbox, 'anchors', 'rpn/anchors', level=l, im_idx=i)
+        # for i, anchors_per_image in enumerate(anchors):
+        #     for l, anchors_per_layer in enumerate(anchors_per_image, 1):
+        #         get_tensor_saver().save(anchors_per_layer.bbox, 'anchors', 'rpn/anchors', level=l, im_idx=i)
 
         if self.training:
             return self._forward_train(anchors, objectness, rpn_box_regression, targets)
@@ -191,8 +191,8 @@ class RPNModule(torch.nn.Module):
                     anchors, objectness, rpn_box_regression, targets
                 )
 
-        for i, boxes_per_im in enumerate(boxes):
-            get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
+        # for i, boxes_per_im in enumerate(boxes):
+        #     get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
 
         loss_objectness, loss_rpn_box_reg = self.loss_evaluator(
             anchors, objectness, rpn_box_regression, targets
@@ -215,8 +215,8 @@ class RPNModule(torch.nn.Module):
             ]
             boxes = [box[ind] for box, ind in zip(boxes, inds)]
 
-        for i, boxes_per_im in enumerate(boxes):
-            get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
+        # for i, boxes_per_im in enumerate(boxes):
+        #     get_tensor_saver().save(boxes_per_im.bbox, 'proposals', 'rpn', im_idx=i)
 
         return boxes, {}
 

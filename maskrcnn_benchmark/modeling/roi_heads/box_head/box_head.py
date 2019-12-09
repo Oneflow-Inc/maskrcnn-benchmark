@@ -47,35 +47,35 @@ class ROIBoxHead(torch.nn.Module):
         # extract features that will be fed to the final classifier. The
         # feature_extractor generally corresponds to the pooler + heads
         x = self.feature_extractor(features, proposals)
-        get_tensor_saver().save(
-            tensor=x,
-            tensor_name="fc7",
-            scope="roi_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=x,
+        #     tensor_name="fc7",
+        #     scope="roi_head",
+        #     save_grad=True
+        # )
         # final classifier that converts the features into predictions
         class_logits, box_regression = self.predictor(x)
 
-        get_tensor_saver().save(
-            tensor=class_logits,
-            tensor_name="class_logits",
-            scope="roi_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=class_logits,
+        #     tensor_name="class_logits",
+        #     scope="roi_head",
+        #     save_grad=True
+        # )
 
-        get_tensor_saver().save(
-            tensor=box_regression,
-            tensor_name="box_regression",
-            scope="roi_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=box_regression,
+        #     tensor_name="box_regression",
+        #     scope="roi_head",
+        #     save_grad=True
+        # )
 
-        get_tensor_saver().save(
-            tensor=proposals[0].bbox,
-            tensor_name="proposals",
-            scope="roi_head",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=proposals[0].bbox,
+        #     tensor_name="proposals",
+        #     scope="roi_head",
+        #     save_grad=False
+        # )
 
         if not self.training:
             result = self.post_processor((class_logits, box_regression), proposals)

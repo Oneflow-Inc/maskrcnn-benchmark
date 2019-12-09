@@ -38,12 +38,12 @@ class MaskPostProcessor(nn.Module):
         """
         mask_prob = x.sigmoid()
 
-        get_tensor_saver().save(
-            tensor=mask_prob,
-            tensor_name="mask_prob",
-            scope="mask_head",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask_prob,
+        #     tensor_name="mask_prob",
+        #     scope="mask_head",
+        #     save_grad=False
+        # )
 
         # select masks coresponding to the predicted classes
         num_masks = x.shape[0]
@@ -66,31 +66,31 @@ class MaskPostProcessor(nn.Module):
             bbox.add_field("mask", prob)
             results.append(bbox)
 
-        for img_idx, boxlist in enumerate(results):
-            get_tensor_saver().save(
-                tensor=boxlist.bbox,
-                tensor_name="boxes_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=boxlist.get_field("scores"),
-                tensor_name="scores_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=boxlist.get_field("labels"),
-                tensor_name="labels_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=boxlist.get_field("mask"),
-                tensor_name="masks_{}".format(img_idx),
-                scope="complete_eval_net",
-                save_grad=False
-            )
+        # for img_idx, boxlist in enumerate(results):
+            # get_tensor_saver().save(
+            #     tensor=boxlist.bbox,
+            #     tensor_name="boxes_{}".format(img_idx),
+            #     scope="complete_eval_net",
+            #     save_grad=False
+            # )
+            # get_tensor_saver().save(
+            #     tensor=boxlist.get_field("scores"),
+            #     tensor_name="scores_{}".format(img_idx),
+            #     scope="complete_eval_net",
+            #     save_grad=False
+            # )
+            # get_tensor_saver().save(
+            #     tensor=boxlist.get_field("labels"),
+            #     tensor_name="labels_{}".format(img_idx),
+            #     scope="complete_eval_net",
+            #     save_grad=False
+            # )
+            # get_tensor_saver().save(
+            #     tensor=boxlist.get_field("mask"),
+            #     tensor_name="masks_{}".format(img_idx),
+            #     scope="complete_eval_net",
+            #     save_grad=False
+            # )
 
         return results
 
@@ -208,27 +208,27 @@ class Masker(object):
     # masks: (R, 1, 28, 28)
     # boxes: boxes_list of length R
     def forward_single_image(self, masks, boxes):
-        get_tensor_saver().save(
-            tensor=torch.squeeze(masks, 1),
-            tensor_name="mask_prob",
-            scope="test_masker",
-            save_grad=False
-        )
-        get_tensor_saver().save(
-            tensor=boxes.bbox,
-            tensor_name="box",
-            scope="test_masker",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=torch.squeeze(masks, 1),
+        #     tensor_name="mask_prob",
+        #     scope="test_masker",
+        #     save_grad=False
+        # )
+        # get_tensor_saver().save(
+        #     tensor=boxes.bbox,
+        #     tensor_name="box",
+        #     scope="test_masker",
+        #     save_grad=False
+        # )
         boxes = boxes.convert("xyxy")
         im_w, im_h = boxes.size
         image_size = torch.tensor(np.array([im_h, im_w]))
-        get_tensor_saver().save(
-            tensor=image_size,
-            tensor_name="image_size",
-            scope="test_masker",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=image_size,
+        #     tensor_name="image_size",
+        #     scope="test_masker",
+        #     save_grad=False
+        # )
         res = [
             paste_mask_in_image(mask[0], box, im_h, im_w, self.threshold, self.padding)
             for mask, box in zip(masks, boxes.bbox)
@@ -238,12 +238,12 @@ class Masker(object):
         else:
             res = masks.new_empty((0, 1, masks.shape[-2], masks.shape[-1]))
         
-        get_tensor_saver().save(
-            tensor=torch.squeeze(res, 1),
-            tensor_name="out",
-            scope="test_masker",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=torch.squeeze(res, 1),
+        #     tensor_name="out",
+        #     scope="test_masker",
+        #     save_grad=False
+        # )
 
         return res
 

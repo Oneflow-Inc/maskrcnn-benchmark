@@ -32,12 +32,12 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
             images.tensors = torch.tensor(fake_images)
             logger.info("Load fake image data from {} at itor {}".format(fake_image_path, idx))
         else:
-            get_tensor_saver().save(
-                tensor=images.tensors,
-                tensor_name='images_{}'.format(idx),
-                save_grad=True,
-                save_shape=False,
-            )
+            # get_tensor_saver().save(
+            #     tensor=images.tensors,
+            #     tensor_name='images_{}'.format(idx),
+            #     save_grad=True,
+            #     save_shape=False,
+            # )
             image_size = []
             for box_list in targets:
                 image_size.append(np.array(box_list.size, dtype=np.int32))

@@ -99,9 +99,9 @@ def do_train(
                 )
             )
         else:
-            get_tensor_saver().save(
-                tensor=images.tensors.permute(0, 2, 3, 1), tensor_name="image"
-            )
+            # get_tensor_saver().save(
+            #     tensor=images.tensors.permute(0, 2, 3, 1), tensor_name="image"
+            # )
 
         get_mock_data_maker().step()
         get_mock_data_maker().update_image(image_id, images)

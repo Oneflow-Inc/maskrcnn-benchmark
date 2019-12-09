@@ -30,12 +30,12 @@ class MaskRCNNC4Predictor(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv5_mask(x))
-        get_tensor_saver().save(
-            tensor=x,
-            tensor_name="conv5",
-            scope="mask_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=x,
+        #     tensor_name="conv5",
+        #     scope="mask_head",
+        #     save_grad=True
+        # )
         return self.mask_fcn_logits(x)
 
 

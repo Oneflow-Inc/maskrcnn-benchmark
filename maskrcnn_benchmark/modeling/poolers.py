@@ -100,24 +100,24 @@ class Pooler(nn.Module):
         num_levels = len(self.poolers)
         rois = self.convert_to_roi_format(boxes)
 
-        get_tensor_saver().save(
-            tensor=rois,
-            tensor_name="rois_with_image_id",
-            scope="roi_head",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=rois,
+        #     tensor_name="rois_with_image_id",
+        #     scope="roi_head",
+        #     save_grad=False
+        # )
 
         if num_levels == 1:
             return self.poolers[0](x[0], rois)
 
         levels = self.map_levels(boxes)
 
-        get_tensor_saver().save(
-            tensor=levels,
-            tensor_name="levels",
-            scope="roi_head",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=levels,
+        #     tensor_name="levels",
+        #     scope="roi_head",
+        #     save_grad=False
+        # )
 
         num_rois = len(rois)
         num_channels = x[0].shape[1]
@@ -136,42 +136,42 @@ class Pooler(nn.Module):
             rois_per_level = rois[idx_in_level]
             result[idx_in_level] = pooler(per_level_feature, rois_per_level).to(dtype)
 
-            get_tensor_saver().save(
-                tensor=idx_in_level,
-                tensor_name="{}_idx_in_level_{}".format(head_name, level),
-                scope=head_name,
-                save_grad=False,
-            )
+            # get_tensor_saver().save(
+            #     tensor=idx_in_level,
+            #     tensor_name="{}_idx_in_level_{}".format(head_name, level),
+            #     scope=head_name,
+            #     save_grad=False,
+            # )
 
-            get_tensor_saver().save(
-                tensor=per_level_feature,
-                tensor_name="{}_feature_map_{}".format(head_name, level),
-                scope=head_name,
-                save_grad=True,
-            )
-            get_tensor_saver().save(
-                tensor=rois_per_level,
-                tensor_name="{}_rois_{}".format(head_name, level),
-                scope=head_name,
-                save_grad=False,
-            )
-            get_tensor_saver().save(
-                tensor=pooler(per_level_feature, rois_per_level).to(dtype),
-                tensor_name="{}_roi_feature_{}".format(head_name, level),
-                scope=head_name,
-                save_grad=True,
-            )
-        get_tensor_saver().save(
-            tensor=torch.cat(idx_in_level_list, 0),
-            tensor_name="origin_indices",
-            scope=head_name
-        )
-        get_tensor_saver().save(
-            tensor=result,
-            tensor_name="{}_pooler_result".format(head_name),
-            scope=head_name,
-            save_grad=True,
-        )
+            # get_tensor_saver().save(
+            #     tensor=per_level_feature,
+            #     tensor_name="{}_feature_map_{}".format(head_name, level),
+            #     scope=head_name,
+            #     save_grad=True,
+            # )
+            # get_tensor_saver().save(
+            #     tensor=rois_per_level,
+            #     tensor_name="{}_rois_{}".format(head_name, level),
+            #     scope=head_name,
+            #     save_grad=False,
+            # )
+            # get_tensor_saver().save(
+            #     tensor=pooler(per_level_feature, rois_per_level).to(dtype),
+            #     tensor_name="{}_roi_feature_{}".format(head_name, level),
+            #     scope=head_name,
+            #     save_grad=True,
+            # )
+        # get_tensor_saver().save(
+        #     tensor=torch.cat(idx_in_level_list, 0),
+        #     tensor_name="origin_indices",
+        #     scope=head_name
+        # )
+        # get_tensor_saver().save(
+        #     tensor=result,
+        #     tensor_name="{}_pooler_result".format(head_name),
+        #     scope=head_name,
+        #     save_grad=True,
+        # )
 
         return result
 

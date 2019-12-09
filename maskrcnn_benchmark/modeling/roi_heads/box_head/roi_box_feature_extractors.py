@@ -73,27 +73,27 @@ class FPN2MLPFeatureExtractor(nn.Module):
         self.out_channels = representation_size
 
     def forward(self, x, proposals):
-        for img_idx in range(len(proposals)):
-            get_tensor_saver().save(
-                tensor=proposals[img_idx].bbox,
-                tensor_name="subsampled_proposals_img_{}".format(img_idx),
-                scope="roi_head",
-                save_grad=False
-            )
+        # for img_idx in range(len(proposals)):
+        #     get_tensor_saver().save(
+        #         tensor=proposals[img_idx].bbox,
+        #         tensor_name="subsampled_proposals_img_{}".format(img_idx),
+        #         scope="roi_head",
+        #         save_grad=False
+        #     )
         x = self.pooler(x, proposals, "roi_head")
-        get_tensor_saver().save(
-            tensor=x,
-            tensor_name="roi_features_reorder",
-            scope="roi_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=x,
+        #     tensor_name="roi_features_reorder",
+        #     scope="roi_head",
+        #     save_grad=True
+        # )
         x = x.view(x.size(0), -1)
-        get_tensor_saver().save(
-            tensor=x,
-            tensor_name="fc6_in_diff",
-            scope="roi_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=x,
+        #     tensor_name="fc6_in_diff",
+        #     scope="roi_head",
+        #     save_grad=True
+        # )
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
 

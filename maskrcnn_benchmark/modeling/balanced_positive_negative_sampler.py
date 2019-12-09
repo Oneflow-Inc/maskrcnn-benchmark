@@ -39,18 +39,18 @@ class BalancedPositiveNegativeSampler(object):
         for img_idx, matched_idxs_per_image in enumerate(matched_idxs):
             positive = torch.nonzero(matched_idxs_per_image >= 1).squeeze(1)
             negative = torch.nonzero(matched_idxs_per_image == 0).squeeze(1)
-            get_tensor_saver().save(
-                tensor=positive,
-                tensor_name="pos_indices_{}".format(img_idx),
-                scope="rpn",
-                save_grad=False
-            )
-            get_tensor_saver().save(
-                tensor=negative,
-                tensor_name="neg_indices_{}".format(img_idx),
-                scope="rpn",
-                save_grad=False
-            )
+            # get_tensor_saver().save(
+            #     tensor=positive,
+            #     tensor_name="pos_indices_{}".format(img_idx),
+            #     scope="rpn",
+            #     save_grad=False
+            # )
+            # get_tensor_saver().save(
+            #     tensor=negative,
+            #     tensor_name="neg_indices_{}".format(img_idx),
+            #     scope="rpn",
+            #     save_grad=False
+            # )
 
             num_pos = int(self.batch_size_per_image * self.positive_fraction)
             # protect against not enough positive examples

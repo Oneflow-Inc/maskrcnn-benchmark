@@ -89,13 +89,13 @@ class RPNPostProcessor(torch.nn.Module):
         objectness = permute_and_flatten(objectness, N, A, 1, H, W).view(N, -1)
         # objectness = objectness.sigmoid()
 
-        get_tensor_saver().save(
-            tensor=objectness,
-            tensor_name="objectness",
-            scope="rpn",
-            save_grad=False,
-            level=level
-        )
+        # get_tensor_saver().save(
+        #     tensor=objectness,
+        #     tensor_name="objectness",
+        #     scope="rpn",
+        #     save_grad=False,
+        #     level=level
+        # )
 
         box_regression = permute_and_flatten(box_regression, N, A, 4, H, W)
 
@@ -122,47 +122,47 @@ class RPNPostProcessor(torch.nn.Module):
         concat_anchors = torch.cat([a.bbox for a in anchors], dim=0)
         concat_anchors = concat_anchors.reshape(N, -1, 4)[batch_idx, topk_idx]
 
-        get_tensor_saver().save(
-            tensor=concat_anchors.view(-1, 4),
-            tensor_name="ref_boxes",
-            scope="rpn/box_decode",
-            save_grad=False
-        )
-        get_tensor_saver().save(
-            tensor=box_regression.view(-1, 4),
-            tensor_name="boxes_delta",
-            scope="rpn/box_decode",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=concat_anchors.view(-1, 4),
+        #     tensor_name="ref_boxes",
+        #     scope="rpn/box_decode",
+        #     save_grad=False
+        # )
+        # get_tensor_saver().save(
+        #     tensor=box_regression.view(-1, 4),
+        #     tensor_name="boxes_delta",
+        #     scope="rpn/box_decode",
+        #     save_grad=False
+        # )
         proposals = self.box_coder.decode(
             box_regression.view(-1, 4), concat_anchors.view(-1, 4)
         )
-        get_tensor_saver().save(
-            tensor=proposals,
-            tensor_name="boxes",
-            scope="rpn/box_decode",
-            save_grad=False
-        )
+        # get_tensor_saver().save(
+        #     tensor=proposals,
+        #     tensor_name="boxes",
+        #     scope="rpn/box_decode",
+        #     save_grad=False
+        # )
 
         proposals = proposals.view(N, -1, 4)
 
-        for img_idx, _ in enumerate(proposals):
-            get_tensor_saver().save(
-                tensor=proposals[img_idx],
-                tensor_name="proposals_after_decode_img_{}_layer_{}".format(img_idx, level),
-                scope="rpn",
-                save_grad=False
-            )
+        # for img_idx, _ in enumerate(proposals):
+        #     get_tensor_saver().save(
+        #         tensor=proposals[img_idx],
+        #         tensor_name="proposals_after_decode_img_{}_layer_{}".format(img_idx, level),
+        #         scope="rpn",
+        #         save_grad=False
+        #     )
 
         result = []
         for im_i, (proposal, score, im_shape) in enumerate(zip(proposals, objectness, image_shapes)):
             boxlist = BoxList(proposal, im_shape, mode="xyxy")
             boxlist.add_field("objectness", score)
-            get_tensor_saver().save(torch.tensor(boxlist.size), 'image_size', 'rpn', im_idx=im_i)
+            # get_tensor_saver().save(torch.tensor(boxlist.size), 'image_size', 'rpn', im_idx=im_i)
             boxlist = boxlist.clip_to_image(remove_empty=False)
-            get_tensor_saver().save(boxlist.bbox, 'clipped_boxes', 'rpn', level=level, im_idx=im_i)
+            # get_tensor_saver().save(boxlist.bbox, 'clipped_boxes', 'rpn', level=level, im_idx=im_i)
             boxlist = remove_small_boxes(boxlist, self.min_size)
-            get_tensor_saver().save(boxlist.bbox, 'after_remove_small_boxes', 'rpn', level=level, im_idx=im_i)
+            # get_tensor_saver().save(boxlist.bbox, 'after_remove_small_boxes', 'rpn', level=level, im_idx=im_i)
 
             def dump_callback(keep):
                 get_tensor_saver().save(keep, 'nms_indices', 'rpn', level=level, im_idx=im_i)
@@ -175,7 +175,7 @@ class RPNPostProcessor(torch.nn.Module):
                 dump_callback=dump_callback
             )
             result.append(boxlist)
-            get_tensor_saver().save(boxlist.bbox, 'proposals', 'rpn', level=level, im_idx=im_i)
+            # get_tensor_saver().save(boxlist.bbox, 'proposals', 'rpn', level=level, im_idx=im_i)
 
         return result
 
@@ -206,13 +206,13 @@ class RPNPostProcessor(torch.nn.Module):
         if self.training and targets is not None:
             boxlists = self.add_gt_proposals(boxlists, targets)
 
-        for img_idx, boxlist in enumerate(boxlists):
-            get_tensor_saver().save(
-                tensor=boxlist.bbox,
-                tensor_name='final_proposals_img_{}'.format(img_idx),
-                scope='rpn',
-                save_grad=False,
-            )
+        # for img_idx, boxlist in enumerate(boxlists):
+        #     get_tensor_saver().save(
+        #         tensor=boxlist.bbox,
+        #         tensor_name='final_proposals_img_{}'.format(img_idx),
+        #         scope='rpn',
+        #         save_grad=False,
+        #     )
 
         return boxlists
 

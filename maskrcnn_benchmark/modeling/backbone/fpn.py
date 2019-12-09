@@ -72,14 +72,14 @@ class FPN(nn.Module):
             last_results = self.top_blocks(results[-1])
             results.extend(last_results)
 
-        for i, feature in enumerate(results, 1):
-            get_tensor_saver().save(
-                tensor=feature,
-                tensor_name='CHECK_POINT_fpn_feature'.format(i),
-                scope='backbone',
-                save_grad=True,
-                level=i
-            )
+        # for i, feature in enumerate(results, 1):
+        #     get_tensor_saver().save(
+        #         tensor=feature,
+        #         tensor_name='CHECK_POINT_fpn_feature'.format(i),
+        #         scope='backbone',
+        #         save_grad=True,
+        #         level=i
+        #     )
 
         return tuple(results)
 

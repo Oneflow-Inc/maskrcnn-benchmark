@@ -149,20 +149,20 @@ class ResNet(nn.Module):
         outputs = []
         x = self.stem(x)
 
-        get_tensor_saver().save(tensor=x, tensor_name="CHECK_POINT_stem_out", scope="backbone/stem", save_grad=False)
+        # get_tensor_saver().save(tensor=x, tensor_name="CHECK_POINT_stem_out", scope="backbone/stem", save_grad=False)
 
         for stage_name in self.stages:
             x = getattr(self, stage_name)(x)
             if self.return_features[stage_name]:
                 outputs.append(x)
 
-        for i, tensor in enumerate(outputs, 1):
-            get_tensor_saver().save(
-                tensor=tensor,
-                tensor_name="CHECK_POINT_resnet_stage_{}_out".format(i),
-                scope="backbone/stage",
-                save_grad=True if i >= self.cfg.MODEL.BACKBONE.FREEZE_CONV_BODY_AT else False
-            )
+        # for i, tensor in enumerate(outputs, 1):
+        #     get_tensor_saver().save(
+        #         tensor=tensor,
+        #         tensor_name="CHECK_POINT_resnet_stage_{}_out".format(i),
+        #         scope="backbone/stage",
+        #         save_grad=True if i >= self.cfg.MODEL.BACKBONE.FREEZE_CONV_BODY_AT else False
+        #     )
 
         return outputs
 
@@ -355,18 +355,18 @@ class Bottleneck(nn.Module):
 
         out = self.conv1(x)
 
-        get_tensor_saver().save(tensor=out, tensor_name="conv1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+        # get_tensor_saver().save(tensor=out, tensor_name="conv1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out = self.bn1(out)
         out = F.relu_(out)
 
-        get_tensor_saver().save(tensor=out, tensor_name="bn1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+        # get_tensor_saver().save(tensor=out, tensor_name="bn1", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out = self.conv2(out)
         out = self.bn2(out)
         out = F.relu_(out)
         
-        get_tensor_saver().save(tensor=out, tensor_name="bn2", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
+        # get_tensor_saver().save(tensor=out, tensor_name="bn2", scope="backbone/stage-intermediate/" + stage_info, save_grad=False)
 
         out0 = self.conv3(out)
         out = self.bn3(out0)

@@ -58,6 +58,9 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         # sort indices for reproducible results
         self.ids = sorted(self.ids)
 
+        print("z" * 100)
+        print(len(self.ids))
+
         # filter images without detection annotations
         if remove_images_without_annotations:
             ids = []
@@ -68,10 +71,8 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
                     ids.append(img_id)
             self.ids = ids
 
-        print("z" * 1000)
+        print("z" * 100)
         print(len(self.ids))
-        print(type(self.ids))
-        print(self.ids)
 
         self.json_category_id_to_contiguous_id = {
             v: i + 1 for i, v in enumerate(self.coco.getCatIds())

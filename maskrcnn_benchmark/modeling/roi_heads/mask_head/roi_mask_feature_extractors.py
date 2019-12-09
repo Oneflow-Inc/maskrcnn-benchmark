@@ -62,12 +62,12 @@ class MaskRCNNFPNFeatureExtractor(nn.Module):
 
         for layer_name in self.blocks:
             x = F.relu(getattr(self, layer_name)(x))
-            get_tensor_saver().save(
-                tensor=x,
-                tensor_name=layer_name,
-                scope="mask_head",
-                save_grad=True
-            )
+            # get_tensor_saver().save(
+            #     tensor=x,
+            #     tensor_name=layer_name,
+            #     scope="mask_head",
+            #     save_grad=True
+            # )
 
 
         return x

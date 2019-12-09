@@ -38,32 +38,32 @@ def project_masks_on_boxes(
         zip(segmentation_masks, proposals)
     ):
         segmentation_mask = segmentation_mask.convert("mask")
-        get_tensor_saver().save(
-            tensor=segmentation_mask.get_mask_tensor(),
-            tensor_name="segmentation_mask_{}".format(i),
-            scope="mask",
-            im_idx=im_idx,
-            save_grad=False,
-        )
-        get_tensor_saver().save(
-            tensor=proposal,
-            tensor_name="segmentation_proposal_{}".format(i),
-            scope="mask",
-            im_idx=im_idx,
-            save_grad=False,
-        )
+        # get_tensor_saver().save(
+        #     tensor=segmentation_mask.get_mask_tensor(),
+        #     tensor_name="segmentation_mask_{}".format(i),
+        #     scope="mask",
+        #     im_idx=im_idx,
+        #     save_grad=False,
+        # )
+        # get_tensor_saver().save(
+        #     tensor=proposal,
+        #     tensor_name="segmentation_proposal_{}".format(i),
+        #     scope="mask",
+        #     im_idx=im_idx,
+        #     save_grad=False,
+        # )
         # crop the masks, resize them to the desired resolution and
         # then convert them to the tensor representation.
         cropped_mask = segmentation_mask.crop(proposal)
         scaled_mask = cropped_mask.resize((M, M))
         mask = scaled_mask.get_mask_tensor()
-        get_tensor_saver().save(
-            tensor=mask,
-            tensor_name="segmentation_resized_mask_{}".format(i),
-            scope="mask",
-            im_idx=im_idx,
-            save_grad=False,
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask,
+        #     tensor_name="segmentation_resized_mask_{}".format(i),
+        #     scope="mask",
+        #     im_idx=im_idx,
+        #     save_grad=False,
+        # )
         masks.append(mask)
     if len(masks) == 0:
         return torch.empty(0, dtype=torch.float32, device=device)
@@ -145,9 +145,9 @@ class MaskRCNNLossComputation(object):
         labels, mask_targets = self.prepare_targets(proposals, targets)
 
         labels = cat(labels, dim=0)
-        get_tensor_saver().save(
-            tensor=labels, tensor_name="concat_gt_labels", scope="mask_head"
-        )
+        # get_tensor_saver().save(
+        #     tensor=labels, tensor_name="concat_gt_labels", scope="mask_head"
+        # )
         mask_targets = cat(mask_targets, dim=0)
 
         positive_inds = torch.nonzero(labels > 0).squeeze(1)
@@ -159,26 +159,26 @@ class MaskRCNNLossComputation(object):
             return mask_logits.sum() * 0
 
         get_mock_data_maker().update_mask_targets(mask_targets)
-        get_tensor_saver().save(
-            tensor=mask_targets, tensor_name="mask_targets", scope="mask_head"
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask_targets, tensor_name="mask_targets", scope="mask_head"
+        # )
         mask_logits4loss = mask_logits[positive_inds, labels_pos]
-        get_tensor_saver().save(
-            tensor=mask_logits4loss,
-            tensor_name="mask_logits4loss",
-            scope="mask_head",
-            save_grad=True,
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask_logits4loss,
+        #     tensor_name="mask_logits4loss",
+        #     scope="mask_head",
+        #     save_grad=True,
+        # )
 
         mask_loss = F.binary_cross_entropy_with_logits(
             mask_logits4loss, mask_targets
         )
-        get_tensor_saver().save(
-            tensor=mask_loss,
-            tensor_name="mask_loss",
-            scope="mask_head",
-            save_grad=True
-        )
+        # get_tensor_saver().save(
+        #     tensor=mask_loss,
+        #     tensor_name="mask_loss",
+        #     scope="mask_head",
+        #     save_grad=True
+        # )
         return mask_loss
 
 
