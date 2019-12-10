@@ -115,7 +115,7 @@ def inference(
         training=False,
         base_dir="inference_dump",
         iteration=0,
-        max_iter=1
+        max_iter=-1
     )
 
     predictions = compute_on_dataset(cfg, model, data_loader, device, logger, inference_timer)
