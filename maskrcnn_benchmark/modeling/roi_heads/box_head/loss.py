@@ -223,9 +223,11 @@ class FastRCNNLossComputation(object):
             size_average=False,
             beta=1,
         )
+        with torch.no_grad():
+            total_pos_inds_elem_cnt = torch.tensor(float(sampled_pos_inds_subset.numel())).to(device)
         box_loss = box_loss / labels.numel()
 
-        return classification_loss, box_loss
+        return classification_loss, box_loss, total_pos_inds_elem_cnt
 
 
 def make_roi_box_loss_evaluator(cfg):

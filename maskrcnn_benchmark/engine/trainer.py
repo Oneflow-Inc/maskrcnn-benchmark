@@ -146,11 +146,11 @@ def do_train(
                 {"iter": i, "legend": "loss_box_reg", "value": meters.meters["loss_box_reg"].median},
                 {"iter": i, "legend": "loss_classifier", "value": meters.meters["loss_classifier"].median},
                 {"iter": i, "legend": "loss_mask", "value": meters.meters["loss_mask"].median},
-                # {
-                #     "iter": i,
-                #     "legend": "total_pos_inds_elem_cnt",
-                #     "value": meters["total_pos_inds_elem_cnt"],
-                # },
+                {
+                    "iter": i,
+                    "legend": "total_pos_inds_elem_cnt",
+                    "value": meters.meters["total_pos_inds_elem_cnt"].median,
+                },
             ]
         )
         metrics = pd.concat([metrics, df], axis=0)
