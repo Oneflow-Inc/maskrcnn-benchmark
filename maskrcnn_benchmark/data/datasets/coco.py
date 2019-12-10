@@ -87,15 +87,15 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
-        image_id = anno[0]["image_id"]
+        # image_id = anno[0]["image_id"]
 
-        if idx < 1:
-            print("save image {}, size {} to png".format(image_id, img.size))
-            torchvision.utils.save_image(
-                torchvision.transforms.functional.to_tensor(img),
-                "{:012d}.png".format(image_id),
-            )
-            np.save("raw_img_{}".format(image_id), torchvision.transforms.functional.to_tensor(img))
+        # if idx < 1:
+        #     print("save image {}, size {} to png".format(image_id, img.size))
+        #     torchvision.utils.save_image(
+        #         torchvision.transforms.functional.to_tensor(img),
+        #         "{:012d}.png".format(image_id),
+        #     )
+        #     np.save("raw_img_{}".format(image_id), torchvision.transforms.functional.to_tensor(img))
 
         # filter crowd annotations
         # TODO might be better to add an extra field
@@ -127,13 +127,13 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        print(
-            "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
-                idx, image_id, len(anno)
-            )
-        )
+        # print(
+        #     "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
+        #         idx, image_id, len(anno)
+        #     )
+        # )
         # print("coco __getitem__ anno example: ", anno[0])
-        return img, target, image_id
+        return img, target, idx
 
     def get_img_info(self, index):
         img_id = self.id_to_img_map[index]

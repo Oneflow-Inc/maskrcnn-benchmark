@@ -22,7 +22,7 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
-    fake_image_list = []
+    # fake_image_list = []
     for idx, batch in enumerate(tqdm(data_loader)):
         images, targets, image_ids = batch
         if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
@@ -47,10 +47,10 @@ def compute_on_dataset(cfg, model, data_loader, device, logger, timer=None):
             print(image_size)
 
             # gen fake image list
-            fake_image_list.append(images.tensors.detach().cpu().numpy())
-            if idx == len(data_loader) - 1:
-                print("dump fake image list...")
-                pkl.dump(fake_image_list, open("/tmp/fake_image_list.pkl", "wb"))
+            # fake_image_list.append(images.tensors.detach().cpu().numpy())
+            # if idx == len(data_loader) - 1:
+            #     print("dump fake image list...")
+            #     pkl.dump(fake_image_list, open("/tmp/fake_image_list.pkl", "wb"))
 
         images = images.to(device)
         with torch.no_grad():
