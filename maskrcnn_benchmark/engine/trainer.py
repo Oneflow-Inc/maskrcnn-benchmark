@@ -115,7 +115,6 @@ def do_train(
 
         loss_dict = model(images, targets)
 
-        get_mock_data_maker().save()
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -141,6 +140,7 @@ def do_train(
         i = iteration - 1
         df = pd.DataFrame(
             [
+                {"iter": i, "legend": "elapsed_time", "value": meters.meters["time"].median},
                 {"iter": i, "legend": "loss_rpn_box_reg", "value": meters.meters["loss_rpn_box_reg"].median},
                 {"iter": i, "legend": "loss_objectness", "value": meters.meters["loss_objectness"].median},
                 {"iter": i, "legend": "loss_box_reg", "value": meters.meters["loss_box_reg"].median},
