@@ -12,6 +12,7 @@ from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 from apex import amp
 
 import numpy as np
+import pandas as pd
 import os
 import pickle as pkl
 
@@ -71,9 +72,11 @@ def do_train(
         base_dir="train_dump",
         iteration=start_iter,
         max_iter=start_iter + 10,
+        offline=True
     )
     create_mock_data_maker(start_iter)
 
+    metrics = pd.DataFrame()
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
     ):
@@ -135,6 +138,22 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
+        i = iteration - 1
+        df = pd.DataFrame(
+            [
+                {"iter": i, "legend": "loss_rpn_box_reg", "value": meters.meters["loss_rpn_box_reg"].median},
+                {"iter": i, "legend": "loss_objectness", "value": meters.meters["loss_objectness"].median},
+                {"iter": i, "legend": "loss_box_reg", "value": meters.meters["loss_box_reg"].median},
+                {"iter": i, "legend": "loss_classifier", "value": meters.meters["loss_classifier"].median},
+                {"iter": i, "legend": "loss_mask", "value": meters.meters["loss_mask"].median},
+                # {
+                #     "iter": i,
+                #     "legend": "total_pos_inds_elem_cnt",
+                #     "value": meters["total_pos_inds_elem_cnt"],
+                # },
+            ]
+        )
+        metrics = pd.concat([metrics, df], axis=0)
         if (
             iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0
             or iteration == max_iter
@@ -156,6 +175,14 @@ def do_train(
                     memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                 )
             )
+        if (
+            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS == 0
+            or iteration == max_iter
+        ):
+            if dist.get_rank() == 0:
+                npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(i, cfg.SOLVER.IMS_PER_BATCH, ":".join(cfg.DATASETS.TRAIN) ,str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")))
+                metrics.to_csv(npy_file_name, index=False)
+                print("saved: {}".format(npy_file_name))
         if iteration % checkpoint_period == 0:
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
         if iteration == max_iter:
