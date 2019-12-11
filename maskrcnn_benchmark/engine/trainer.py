@@ -179,7 +179,7 @@ def do_train(
             iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS == 0
             or iteration == max_iter
         ):
-            if dist.get_rank() == 0:
+            if get_world_size() < 2 or dist.get_rank() == 0:
                 npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(i, cfg.SOLVER.IMS_PER_BATCH, ":".join(cfg.DATASETS.TRAIN) ,str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")))
                 metrics.to_csv(npy_file_name, index=False)
                 print("saved: {}".format(npy_file_name))
