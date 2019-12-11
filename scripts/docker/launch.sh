@@ -1,7 +1,10 @@
 installed="/workspace/object_detection/maskrcnn_benchmark/"
+model_dir=$PWD/model_dir
+mkdir $model_dir
 extra=""
 extra="$extra -v /model_zoo:/model_zoo"
 extra="$extra -v /dataset:/dataset"
+extra="$extra -v $model_dir:/root/.torch/models"
 
 extra="$extra -v $PWD:/maskrcnn_benchmark"
 extra="$extra --workdir /maskrcnn_benchmark"
