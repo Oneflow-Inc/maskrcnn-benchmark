@@ -449,6 +449,12 @@ _C.AMP_VERBOSE = False
 # OneFlow, PyTorch comparing conf
 # ---------------------------------------------------------------------------- #
 _C.ONEFLOW_PYTORCH_COMPARING = CN()
+# filter images with category id > 80
+_C.ONEFLOW_PYTORCH_COMPARING.FILTER_INVALID_CATEGORY_IMAGES = False
+# save tensor with name including tensor shape
+_C.ONEFLOW_PYTORCH_COMPARING.SAVE_TENSOR_INCLUDE_SHAPE_IN_NAME = False
+# enable save tensor
+_C.ONEFLOW_PYTORCH_COMPARING.ENABLE_TENSOR_SAVER = False
 # Load OneFlow decoded images to eliminate JPEG decoder difference
 _C.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH = ""
 # PyTorch use catituous catetory id by default, OneFlow don't

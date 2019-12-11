@@ -4,7 +4,7 @@ import pickle as pk
 
 
 class TensorSaver(object):
-    def __init__(self, training, base_dir, iteration, max_iter):
+    def __init__(self, training, base_dir, iteration, max_iter, save_shape=False):
         self.training = training
         self.base_dir = base_dir
         self.iteration = iteration
@@ -12,6 +12,7 @@ class TensorSaver(object):
             self.max_iteration = max_iter
         else:
             self.max_iteration = 0
+        self.save_shape = save_shape
 
     def step(self, iteration=None):
         if iteration:
@@ -27,7 +28,6 @@ class TensorSaver(object):
         save_grad=False,
         level=None,
         im_idx=None,
-        save_shape=True,
     ):
         if self.iteration > self.max_iteration:
             return
@@ -44,7 +44,7 @@ class TensorSaver(object):
             suffix = suffix + ".image{}".format(im_idx)
         if isinstance(level, int):
             suffix = suffix + ".layer{}".format(level)
-        if save_shape:
+        if self.save_shape:
             suffix = suffix + "." + str(tuple(tensor.size()))
 
         save_path = os.path.join(save_dir, "{}{}".format(tensor_name, suffix))
@@ -78,13 +78,13 @@ tensor_saver = None
 
 
 def create_tensor_saver(
-    training, base_dir, iteration=0, max_iter=None, offline=False
+    training, base_dir, iteration=0, max_iter=None, save_shape=False, enable_save=False
 ):
     global tensor_saver
-    if offline:
-        tensor_saver = OfflineTensorSaver(training, base_dir, iteration, max_iter)
+    if enable_save:
+        tensor_saver = TensorSaver(training, base_dir, iteration, max_iter, save_shape)
     else:
-        tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
+        tensor_saver = OfflineTensorSaver(training, base_dir, iteration, max_iter, save_shape)
 
 
 def get_tensor_saver():

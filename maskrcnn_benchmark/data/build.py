@@ -15,7 +15,8 @@ from .transforms import build_transforms
 
 
 def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True,
-                  use_contiguous_category_id=True):
+                  use_contiguous_category_id=True, 
+                  remove_images_with_category_id_more_than_80=False):
     """
     Arguments:
         dataset_list (list[str]): Contains the names of the datasets, i.e.,
@@ -43,6 +44,7 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True,
             args["use_difficult"] = not is_train
         args["transforms"] = transforms
         args["use_contiguous_category_id"] = use_contiguous_category_id
+        args["remove_images_with_category_id_more_than_80"] = remove_images_with_category_id_more_than_80
         # make dataset from factory
         dataset = factory(**args)
         datasets.append(dataset)
@@ -155,7 +157,8 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
 
     transforms = build_transforms(cfg, is_train)
     datasets = build_dataset(dataset_list, transforms, DatasetCatalog, is_train,
-                             cfg.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID)
+                             cfg.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID,
+                             cfg.ONEFLOW_PYTORCH_COMPARING.FILTER_INVALID_CATEGORY_IMAGES)
 
     data_loaders = []
     for dataset in datasets:

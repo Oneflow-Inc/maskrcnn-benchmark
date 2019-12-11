@@ -72,7 +72,8 @@ def do_train(
         base_dir="train_dump",
         iteration=start_iter,
         max_iter=start_iter + 10,
-        offline=True
+        save_shape=cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_TENSOR_INCLUDE_SHAPE_IN_NAME,
+        enable_save=cfg.ONEFLOW_PYTORCH_COMPARING.ENABLE_TENSOR_SAVER,
     )
     create_mock_data_maker(start_iter)
 
@@ -114,7 +115,6 @@ def do_train(
         targets = [target.to(device) for target in targets]
 
         loss_dict = model(images, targets)
-
 
         losses = sum(loss for loss in loss_dict.values())
 
