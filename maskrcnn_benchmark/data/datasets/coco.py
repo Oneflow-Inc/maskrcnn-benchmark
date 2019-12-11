@@ -49,7 +49,7 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         super(COCODataset, self).__init__(root, ann_file)
 
         # remove imgs with category_id > 80
-        if use_contiguous_category_id:
+        if not use_contiguous_category_id:
             to_remove = set([])
             for cat_id, _ in self.coco.cats.items():
                 if cat_id > 80:
