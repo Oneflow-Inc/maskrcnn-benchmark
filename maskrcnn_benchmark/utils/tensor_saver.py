@@ -82,7 +82,7 @@ def create_tensor_saver(
 ):
     global tensor_saver
     if offline:
-        tensor_saver = OfflineTensorSaver()
+        tensor_saver = OfflineTensorSaver(training, base_dir, iteration, max_iter)
     else:
         tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
 
