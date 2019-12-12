@@ -77,7 +77,9 @@ def do_train(
     )
     create_mock_data_maker(start_iter, enable=False)
 
-    metrics = pd.DataFrame()
+    metrics = pd.DataFrame(
+        {"iter": 0, "legend": "cfg", "value": str(cfg)}, index=[0]
+    )
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
     ):
@@ -146,6 +148,9 @@ def do_train(
                 {"iter": i, "legend": "loss_box_reg", "value": meters.meters["loss_box_reg"].median},
                 {"iter": i, "legend": "loss_classifier", "value": meters.meters["loss_classifier"].median},
                 {"iter": i, "legend": "loss_mask", "value": meters.meters["loss_mask"].median},
+                {"iter": i, "legend": "lr", "value": optimizer.param_groups[0]["lr"]},
+                {"iter": i, "legend": "max_mem", "value": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0},
+                {"iter": i, "legend": "loader_time", "value": data_time},
                 {
                     "iter": i,
                     "legend": "total_pos_inds_elem_cnt",
