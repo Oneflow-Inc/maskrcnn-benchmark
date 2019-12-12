@@ -75,7 +75,7 @@ def do_train(
         save_shape=cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_TENSOR_INCLUDE_SHAPE_IN_NAME,
         enable_save=cfg.ONEFLOW_PYTORCH_COMPARING.ENABLE_TENSOR_SAVER,
     )
-    create_mock_data_maker(start_iter)
+    create_mock_data_maker(start_iter, enable=False)
 
     metrics = pd.DataFrame()
     for iteration, (images, targets, image_id) in enumerate(

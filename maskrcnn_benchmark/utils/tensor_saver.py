@@ -96,15 +96,18 @@ def get_tensor_saver():
 
 
 class MockDataMaker:
-    def __init__(self, start_iter=1):
+    def __init__(self, start_iter=1, enabled=True):
         self.iter_ = start_iter
         self.data_ = {}
+        self.enabled_ = enabled
 
     def update_image(self, image_id, images):
+        if not self.enabled_: return
         self.data_["image_id"] = str(image_id)
         self.data_["images"] = images.tensors.detach().numpy()
 
     def update_target(self, targets):
+        if not self.enabled_: return
         self.data_["image_size"] = []
         self.data_["gt_bbox"] = []
         self.data_["gt_labels"] = []
@@ -138,9 +141,11 @@ class MockDataMaker:
         self.data_["image_size"] = numpy.stack(self.data_["image_size"], axis=0)
 
     def update_mask_targets(self, mask_targets):
+        if not self.enabled_: return
         self.data_["segm_mask_targets"] = mask_targets.cpu().detach().numpy()
 
     def save(self):
+        if not self.enabled_: return
         dump_dir = os.path.join("train_dump", "iter_{}".format(self.iter_))
         if not os.path.exists(dump_dir):
             os.makedirs(dump_dir)
@@ -160,9 +165,9 @@ def dump_data(iter, images, targets, image_id):
 mock_data_maker = None
 
 
-def create_mock_data_maker(iter):
+def create_mock_data_maker(iter, enable=True):
     global mock_data_maker
-    mock_data_maker = MockDataMaker(iter)
+    mock_data_maker = MockDataMaker(iter, enable)
 
 
 def get_mock_data_maker():
