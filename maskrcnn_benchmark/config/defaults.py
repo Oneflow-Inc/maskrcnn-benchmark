@@ -50,7 +50,7 @@ _C.INPUT.MAX_SIZE_TEST = 1333
 # Values to be used for image normalization
 _C.INPUT.PIXEL_MEAN = [102.9801, 115.9465, 122.7717]
 # Values to be used for image normalization
-_C.INPUT.PIXEL_STD = [1., 1., 1.]
+_C.INPUT.PIXEL_STD = [1.0, 1.0, 1.0]
 # Convert image to BGR format (for Caffe2 models), in range 0-255
 _C.INPUT.TO_BGR255 = True
 
@@ -184,7 +184,7 @@ _C.MODEL.ROI_HEADS.FG_IOU_THRESHOLD = 0.5
 _C.MODEL.ROI_HEADS.BG_IOU_THRESHOLD = 0.5
 # Default weights on (dx, dy, dw, dh) for normalizing bbox regression targets
 # These are empirically chosen to approximately lead to unit variance targets
-_C.MODEL.ROI_HEADS.BBOX_REG_WEIGHTS = (10., 10., 5., 5.)
+_C.MODEL.ROI_HEADS.BBOX_REG_WEIGHTS = (10.0, 10.0, 5.0, 5.0)
 # RoI minibatch size *per image* (number of regions of interest [ROIs])
 # Total number of RoIs per training minibatch =
 #   TRAIN.BATCH_SIZE_PER_IM * TRAIN.IMS_PER_BATCH
@@ -472,3 +472,23 @@ _C.ONEFLOW_PYTORCH_COMPARING.RPN_RANDOM_SAMPLE = True
 _C.ONEFLOW_PYTORCH_COMPARING.ROI_HEAD_RANDOM_SAMPLE = True
 # dump momentum buffer
 _C.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER = False
+
+
+def print_cfg_diff(cfg1, cfg2, path=""):
+    for k in cfg1.keys():
+        if k not in cfg2:
+            raise ValueError
+
+        if type(cfg1[k]) is CN:
+            sub_path = None
+            if path == "":
+                sub_path = k
+            else:
+                sub_path = path + "." + k
+            assert sub_path is not ""
+            print_cfg_diff(cfg1[k], cfg2[k], sub_path)
+        else:
+            if cfg1[k] != cfg2[k]:
+                print(path, ":")
+                print(" - ", k, " : ", cfg1[k])
+                print(" + ", k, " : ", cfg2[k])

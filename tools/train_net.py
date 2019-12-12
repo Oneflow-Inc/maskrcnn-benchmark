@@ -14,7 +14,7 @@ import os
 import pickle as pkl
 
 import torch
-from maskrcnn_benchmark.config import cfg
+from maskrcnn_benchmark.config import cfg, print_cfg_diff
 from maskrcnn_benchmark.data import make_data_loader
 from maskrcnn_benchmark.solver import make_lr_scheduler
 from maskrcnn_benchmark.solver import make_optimizer
@@ -195,10 +195,13 @@ def main():
         )
         synchronize()
 
+    default_cfg = cfg.clone()
     cfg.merge_from_file(args.config_file)
-    # cfg.merge_from_file("/home/caishenghang/oneflow/oneflow/python/model/maskrcnn/mask_rcnn_R_50_FPN_1x.yaml")
     cfg.merge_from_list(args.opts)
     cfg.freeze()
+
+    print("difference between default (upper) and given config (lower)")
+    print_cfg_diff(default_cfg, cfg)
 
     output_dir = cfg.OUTPUT_DIR
     if output_dir:
