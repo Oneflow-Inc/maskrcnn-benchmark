@@ -78,7 +78,7 @@ def do_train(
     create_mock_data_maker(start_iter, enable=False)
 
     metrics = pd.DataFrame(
-        {"iter": 0, "legend": "cfg", "value": str(cfg)}, index=[0]
+        {"iter": 0, "legend": "cfg", "note": str(cfg)}, index=[0]
     )
     for iteration, (images, targets, image_id) in enumerate(
         data_loader, start_iter
@@ -158,7 +158,7 @@ def do_train(
                 },
             ]
         )
-        metrics = pd.concat([metrics, df], axis=0)
+        metrics = pd.concat([metrics, df], axis=0, sort=False)
         if (
             iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0
             or iteration == max_iter
