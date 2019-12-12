@@ -13,12 +13,19 @@ class TensorSaver(object):
         else:
             self.max_iteration = 0
         self.save_shape = save_shape
+        self.disable_save = False
 
     def step(self, iteration=None):
         if iteration:
             self.iteration = iteration
         else:
             self.iteration += 1
+
+    def disable(self):
+        self.disable_save = True
+
+    def enable(self):
+        self.disable_save = False
 
     def save(
         self,
@@ -29,6 +36,9 @@ class TensorSaver(object):
         level=None,
         im_idx=None,
     ):
+        if self.disable_save:
+            return
+
         if self.iteration > self.max_iteration:
             return
 
