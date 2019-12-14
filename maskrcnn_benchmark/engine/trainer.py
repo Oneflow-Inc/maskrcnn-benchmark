@@ -20,6 +20,7 @@ from maskrcnn_benchmark.utils.tensor_saver import create_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import get_tensor_saver
 from maskrcnn_benchmark.utils.tensor_saver import create_mock_data_maker
 from maskrcnn_benchmark.utils.tensor_saver import get_mock_data_maker
+from maskrcnn_benchmark.utils.tensor_saver import enable_tensor_saver
 
 
 def reduce_loss_dict(loss_dict):
@@ -71,7 +72,8 @@ def do_train(
         training=True,
         base_dir="train_dump",
         iteration=start_iter,
-        max_iter=start_iter + 10,
+        max_iter=start_iter
+        + cfg.ONEFLOW_PYTORCH_COMPARING.MAX_SAVE_TENSOR_ITERATION,
         save_shape=cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_TENSOR_INCLUDE_SHAPE_IN_NAME,
         enable_save=cfg.ONEFLOW_PYTORCH_COMPARING.ENABLE_TENSOR_SAVER,
     )
@@ -104,10 +106,12 @@ def do_train(
                     fake_image_path, iteration
                 )
             )
-        else:
-            get_tensor_saver().save(
-                tensor=images.tensors.permute(0, 2, 3, 1), tensor_name="image"
-            )
+        elif cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_IMAGE_TENSOR is True:
+            with enable_tensor_saver() as saver:
+                saver.save(
+                    tensor=images.tensors.permute(0, 2, 3, 1),
+                    tensor_name="image",
+                )
 
         get_mock_data_maker().step()
         get_mock_data_maker().update_image(image_id, images)
@@ -142,14 +146,48 @@ def do_train(
         i = iteration - 1
         df = pd.DataFrame(
             [
-                {"iter": i, "legend": "elapsed_time", "value": meters.meters["time"].median},
-                {"iter": i, "legend": "loss_rpn_box_reg", "value": meters.meters["loss_rpn_box_reg"].median},
-                {"iter": i, "legend": "loss_objectness", "value": meters.meters["loss_objectness"].median},
-                {"iter": i, "legend": "loss_box_reg", "value": meters.meters["loss_box_reg"].median},
-                {"iter": i, "legend": "loss_classifier", "value": meters.meters["loss_classifier"].median},
-                {"iter": i, "legend": "loss_mask", "value": meters.meters["loss_mask"].median},
-                {"iter": i, "legend": "lr", "value": optimizer.param_groups[0]["lr"]},
-                {"iter": i, "legend": "max_mem", "value": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0},
+                {
+                    "iter": i,
+                    "legend": "elapsed_time",
+                    "value": meters.meters["time"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "loss_rpn_box_reg",
+                    "value": meters.meters["loss_rpn_box_reg"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "loss_objectness",
+                    "value": meters.meters["loss_objectness"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "loss_box_reg",
+                    "value": meters.meters["loss_box_reg"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "loss_classifier",
+                    "value": meters.meters["loss_classifier"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "loss_mask",
+                    "value": meters.meters["loss_mask"].median,
+                },
+                {
+                    "iter": i,
+                    "legend": "lr",
+                    "value": optimizer.param_groups[0]["lr"],
+                },
+                {
+                    "iter": i,
+                    "legend": "max_mem",
+                    "value": torch.cuda.max_memory_allocated()
+                    / 1024.0
+                    / 1024.0,
+                },
                 {"iter": i, "legend": "loader_time", "value": data_time},
                 {
                     "iter": i,
@@ -181,11 +219,17 @@ def do_train(
                 )
             )
         if (
-            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS == 0
+            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS
+            == 0
             or iteration == max_iter
         ):
             if get_world_size() < 2 or dist.get_rank() == 0:
-                npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(i, cfg.SOLVER.IMS_PER_BATCH, ":".join(cfg.DATASETS.TRAIN) ,str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")))
+                npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(
+                    i,
+                    cfg.SOLVER.IMS_PER_BATCH,
+                    ":".join(cfg.DATASETS.TRAIN),
+                    str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")),
+                )
                 metrics.to_csv(npy_file_name, index=False)
                 print("saved: {}".format(npy_file_name))
         if iteration % checkpoint_period == 0:

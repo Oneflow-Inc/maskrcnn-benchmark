@@ -17,6 +17,8 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
         warmup_iters=500,
         warmup_method="linear",
         last_epoch=-1,
+        appointed_lr=-1.0,
+        bias_lr_factor=2,
     ):
         if not list(milestones) == sorted(milestones):
             raise ValueError(
@@ -34,6 +36,8 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
         self.warmup_factor = warmup_factor
         self.warmup_iters = warmup_iters
         self.warmup_method = warmup_method
+        self.appointed_lr = appointed_lr
+        self.bias_lr_factor = bias_lr_factor
         super(WarmupMultiStepLR, self).__init__(optimizer, last_epoch)
 
     def get_lr(self):
@@ -44,9 +48,28 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
             elif self.warmup_method == "linear":
                 alpha = float(self.last_epoch) / self.warmup_iters
                 warmup_factor = self.warmup_factor * (1 - alpha) + alpha
+
+        if self.appointed_lr >= 0.0:
+            lr_cls, lrs = cluster(self.base_lrs)
+            assert len(lrs) == 2
+            lrs = [self.appointed_lr]
+            lrs += [self.appointed_lr * self.bias_lr_factor]
+            return [lrs[i] for i in lr_cls]
+
         return [
             base_lr
             * warmup_factor
             * self.gamma ** bisect_right(self.milestones, self.last_epoch)
             for base_lr in self.base_lrs
         ]
+
+
+def cluster(x):
+    import numpy as np
+
+    uniq = np.unique(np.array(x))
+    ids = []
+    for v in x:
+        idx = np.where(v == uniq)[0].item()
+        ids.append(idx)
+    return ids, uniq

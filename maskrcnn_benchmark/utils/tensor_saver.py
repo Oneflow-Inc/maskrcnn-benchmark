@@ -2,9 +2,21 @@ import os
 import numpy
 import pickle as pk
 
+from contextlib import contextmanager
+
+TENSOR_SAVER = None
+
 
 class TensorSaver(object):
-    def __init__(self, training, base_dir, iteration, max_iter, save_shape=False):
+    def __init__(
+        self,
+        training,
+        base_dir,
+        iteration,
+        max_iter,
+        save_shape=False,
+        enable_save=True,
+    ):
         self.training = training
         self.base_dir = base_dir
         self.iteration = iteration
@@ -13,7 +25,7 @@ class TensorSaver(object):
         else:
             self.max_iteration = 0
         self.save_shape = save_shape
-        self.disable_save = False
+        self.enable_save = enable_save
 
     def step(self, iteration=None):
         if iteration:
@@ -21,11 +33,13 @@ class TensorSaver(object):
         else:
             self.iteration += 1
 
-    def disable(self):
-        self.disable_save = True
-
+    @property
     def enable(self):
-        self.disable_save = False
+        return self.enable_save
+
+    @enable.setter
+    def enable(self, value):
+        self.enable_save = value
 
     def save(
         self,
@@ -36,7 +50,7 @@ class TensorSaver(object):
         level=None,
         im_idx=None,
     ):
-        if self.disable_save:
+        if not self.enable_save:
             return
 
         if self.iteration > self.max_iteration:
@@ -71,38 +85,37 @@ class TensorSaver(object):
             )
 
 
-class OfflineTensorSaver(TensorSaver):
-    def save(
-        self,
-        tensor,
-        tensor_name,
-        scope=None,
-        save_grad=False,
-        level=None,
-        im_idx=None,
-    ):
-        pass
-
-
-tensor_saver = None
-
-
 def create_tensor_saver(
-    training, base_dir, iteration=0, max_iter=None, save_shape=False, enable_save=False
+    training,
+    base_dir,
+    iteration=0,
+    max_iter=None,
+    save_shape=False,
+    enable_save=False,
 ):
-    global tensor_saver
-    if enable_save:
-        tensor_saver = TensorSaver(training, base_dir, iteration, max_iter, save_shape)
-    else:
-        tensor_saver = OfflineTensorSaver(training, base_dir, iteration, max_iter, save_shape)
+    global TENSOR_SAVER
+    TENSOR_SAVER = TensorSaver(
+        training, base_dir, iteration, max_iter, save_shape, enable_save
+    )
 
 
 def get_tensor_saver():
-    global tensor_saver
-    if not tensor_saver:
+    global TENSOR_SAVER
+    if not TENSOR_SAVER:
         raise Exception("Tensor saver not created yet")
 
-    return tensor_saver
+    return TENSOR_SAVER
+
+
+@contextmanager
+def enable_tensor_saver():
+    tensor_saver = get_tensor_saver()
+    enable = tensor_saver.enable
+    tensor_saver.enable = True
+    try:
+        yield tensor_saver
+    finally:
+        tensor_saver.enable = enable
 
 
 class MockDataMaker:
@@ -112,12 +125,14 @@ class MockDataMaker:
         self.enabled_ = enabled
 
     def update_image(self, image_id, images):
-        if not self.enabled_: return
+        if not self.enabled_:
+            return
         self.data_["image_id"] = str(image_id)
         self.data_["images"] = images.tensors.detach().numpy()
 
     def update_target(self, targets):
-        if not self.enabled_: return
+        if not self.enabled_:
+            return
         self.data_["image_size"] = []
         self.data_["gt_bbox"] = []
         self.data_["gt_labels"] = []
@@ -151,11 +166,13 @@ class MockDataMaker:
         self.data_["image_size"] = numpy.stack(self.data_["image_size"], axis=0)
 
     def update_mask_targets(self, mask_targets):
-        if not self.enabled_: return
+        if not self.enabled_:
+            return
         self.data_["segm_mask_targets"] = mask_targets.cpu().detach().numpy()
 
     def save(self):
-        if not self.enabled_: return
+        if not self.enabled_:
+            return
         dump_dir = os.path.join("train_dump", "iter_{}".format(self.iter_))
         if not os.path.exists(dump_dir):
             os.makedirs(dump_dir)

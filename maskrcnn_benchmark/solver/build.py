@@ -28,4 +28,6 @@ def make_lr_scheduler(cfg, optimizer):
         warmup_factor=cfg.SOLVER.WARMUP_FACTOR,
         warmup_iters=cfg.SOLVER.WARMUP_ITERS,
         warmup_method=cfg.SOLVER.WARMUP_METHOD,
+        appointed_lr=cfg.ONEFLOW_PYTORCH_COMPARING.APPOINTED_LR,
+        bias_lr_factor=cfg.SOLVER.BIAS_LR_FACTOR,
     )
