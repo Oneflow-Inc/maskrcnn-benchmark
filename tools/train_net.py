@@ -69,6 +69,8 @@ def train(cfg, local_rank, distributed):
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
+    if cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_MODEL_INITED:
+        checkpointer.save("model_init", **arguments)
 
     if cfg.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER:
         state_dict = optimizer.state_dict()

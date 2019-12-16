@@ -3,6 +3,8 @@ from bisect import bisect_right
 
 import torch
 
+APPOINTED_LR = -1.0
+
 
 # FIXME ideally this would be achieved with a CombinedLRScheduler,
 # separating MultiStepLR with WarmupLR
@@ -36,7 +38,8 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
         self.warmup_factor = warmup_factor
         self.warmup_iters = warmup_iters
         self.warmup_method = warmup_method
-        self.appointed_lr = appointed_lr
+        global APPOINTED_LR
+        APPOINTED_LR = appointed_lr
         self.bias_lr_factor = bias_lr_factor
         super(WarmupMultiStepLR, self).__init__(optimizer, last_epoch)
 
@@ -49,11 +52,12 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
                 alpha = float(self.last_epoch) / self.warmup_iters
                 warmup_factor = self.warmup_factor * (1 - alpha) + alpha
 
-        if self.appointed_lr >= 0.0:
+        global APPOINTED_LR
+        if APPOINTED_LR >= 0.0:
             lr_cls, lrs = cluster(self.base_lrs)
             assert len(lrs) == 2
-            lrs = [self.appointed_lr]
-            lrs += [self.appointed_lr * self.bias_lr_factor]
+            lrs = [APPOINTED_LR]
+            lrs += [APPOINTED_LR * self.bias_lr_factor]
             return [lrs[i] for i in lr_cls]
 
         return [
