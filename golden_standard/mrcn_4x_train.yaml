@@ -1,6 +1,6 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "/model_zoo/detection/R-50.pkl"
+  WEIGHT: "/model_zoo/detection/mask_rcnn_R_50_FPN_4x_init.pth"
   BACKBONE:
     CONV_BODY: "R-50-FPN"
   RESNETS:
