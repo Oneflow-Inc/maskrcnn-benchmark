@@ -143,54 +143,53 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        i = iteration - 1
         df = pd.DataFrame(
             [
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "elapsed_time",
                     "value": meters.meters["time"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "loss_rpn_box_reg",
                     "value": meters.meters["loss_rpn_box_reg"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "loss_objectness",
                     "value": meters.meters["loss_objectness"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "loss_box_reg",
                     "value": meters.meters["loss_box_reg"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "loss_classifier",
                     "value": meters.meters["loss_classifier"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "loss_mask",
                     "value": meters.meters["loss_mask"].median,
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "lr",
                     "value": optimizer.param_groups[0]["lr"],
                 },
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "max_mem",
                     "value": torch.cuda.max_memory_allocated()
                     / 1024.0
                     / 1024.0,
                 },
-                {"iter": i, "legend": "loader_time", "value": data_time},
+                {"iter": iteration, "legend": "loader_time", "value": data_time},
                 {
-                    "iter": i,
+                    "iter": iteration,
                     "legend": "total_pos_inds_elem_cnt",
                     "value": meters.meters["total_pos_inds_elem_cnt"].median,
                 },
@@ -225,7 +224,7 @@ def do_train(
         ):
             if get_world_size() < 2 or dist.get_rank() == 0:
                 npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(
-                    i,
+                    iteration,
                     cfg.SOLVER.IMS_PER_BATCH,
                     ":".join(cfg.DATASETS.TRAIN),
                     str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")),
