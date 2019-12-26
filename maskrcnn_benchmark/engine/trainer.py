@@ -11,6 +11,8 @@ from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 
 from apex import amp
 
+import pandas as pd
+
 def reduce_loss_dict(loss_dict):
     """
     Reduce the loss dictionary from all processes so that process with rank
@@ -37,6 +39,7 @@ def reduce_loss_dict(loss_dict):
 
 
 def do_train(
+    cfg,
     model,
     data_loader,
     optimizer,
@@ -54,6 +57,9 @@ def do_train(
     model.train()
     start_training_time = time.time()
     end = time.time()
+    metrics = pd.DataFrame(
+        {"iter": 0, "legend": "cfg", "note": str(cfg)}, index=[0]
+    )
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
         data_time = time.time() - end
         iteration = iteration + 1
@@ -87,6 +93,55 @@ def do_train(
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
+        df = pd.DataFrame(
+            [
+                {
+                    "iter": iteration,
+                    "legend": "elapsed_time",
+                    "value": meters.meters["time"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "loss_rpn_box_reg",
+                    "value": meters.meters["loss_rpn_box_reg"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "loss_objectness",
+                    "value": meters.meters["loss_objectness"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "loss_box_reg",
+                    "value": meters.meters["loss_box_reg"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "loss_classifier",
+                    "value": meters.meters["loss_classifier"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "loss_mask",
+                    "value": meters.meters["loss_mask"].median,
+                },
+                {
+                    "iter": iteration,
+                    "legend": "lr",
+                    "value": optimizer.param_groups[0]["lr"],
+                },
+                {
+                    "iter": iteration,
+                    "legend": "max_mem",
+                    "value": torch.cuda.max_memory_allocated()
+                    / 1024.0
+                    / 1024.0,
+                },
+                {"iter": iteration, "legend": "loader_time", "value": data_time},
+            ]
+        )
+        metrics = pd.concat([metrics, df], axis=0, sort=False)
+
         logger.info(
             meters.delimiter.join(
                 [
@@ -104,6 +159,21 @@ def do_train(
                 memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
             )
         )
+
+        if (
+            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS
+            == 0
+            or iteration == max_iter
+        ):
+            if get_world_size() < 2 or dist.get_rank() == 0:
+                npy_file_name = "torch-{}-batch_size-{}-image_dir-{}-{}.csv".format(
+                    iteration,
+                    cfg.SOLVER.IMS_PER_BATCH,
+                    ":".join(cfg.DATASETS.TRAIN),
+                    str(datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")),
+                )
+                metrics.to_csv(npy_file_name, index=False)
+                print("saved: {}".format(npy_file_name))
 
         if iteration % checkpoint_period == 0:
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
