@@ -37,7 +37,7 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
         # during training
         if data["factory"] == "COCODataset":
             args["remove_images_without_annotations"] = is_train
-            args["use_contiguous_category_id"] = False
+            args["use_contiguous_category_id"] = True
         if data["factory"] == "PascalVOCDataset":
             args["use_difficult"] = not is_train
         args["transforms"] = transforms

@@ -61,6 +61,6 @@ class MetricLogger(object):
         loss_str = []
         for name, meter in self.meters.items():
             loss_str.append(
-                "{}: {:.4f} ({:.4f})".format(name, meter.median, meter.global_avg)
+                "{}: {:.8f} ({:.8f})".format(name, meter.median, meter.global_avg)
             )
         return self.delimiter.join(loss_str)
