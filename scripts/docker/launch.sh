@@ -13,7 +13,7 @@ extra="$extra -v $HOME:$HOME"
 
 prelude=""
 # prelude="$prelude cp $installed/_C.* /maskrcnn_benchmark;"
-# prelude="$prelude python setup.py develop;"
+prelude="$prelude python setup.py develop;"
 
 docker run -it --rm --ipc=host \
     $extra \
