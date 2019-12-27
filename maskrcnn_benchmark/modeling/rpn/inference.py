@@ -87,7 +87,7 @@ class RPNPostProcessor(torch.nn.Module):
 
         # put in the same format as anchors
         objectness = permute_and_flatten(objectness, N, A, 1, H, W).view(N, -1)
-        # objectness = objectness.sigmoid()
+        objectness = objectness.sigmoid()
 
         get_tensor_saver().save(
             tensor=objectness,
