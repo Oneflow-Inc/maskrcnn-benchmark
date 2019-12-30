@@ -99,6 +99,7 @@ def train(cfg, local_rank, distributed):
     data_loader = make_data_loader(
         cfg,
         is_train=True,
+        shuffle=cfg.ONEFLOW_PYTORCH_COMPARING.SHUFFLE_DATA_LOAD_TRAIN,
         is_distributed=distributed,
         start_iter=arguments["iteration"],
     )

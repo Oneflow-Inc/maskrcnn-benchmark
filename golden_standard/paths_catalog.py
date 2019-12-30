@@ -7,6 +7,18 @@ import os
 class DatasetCatalog(object):
     DATA_DIR = "/dataset"
     DATASETS = {
+        "coco_2017_val_sample_8": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/instances_val2017_subsample_8.json"
+        },
+        "coco_2017_val_sample_8_repeated": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/instances_val2017_subsample_8_repeated.json"
+        },
+        "coco_2017_100_val": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/sample_100_instances_val2017.json"
+        },
         "coco_2017_train": {
             "img_dir": "mscoco_2017/train2017",
             "ann_file": "mscoco_2017/annotations/instances_train2017.json"

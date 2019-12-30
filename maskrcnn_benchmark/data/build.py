@@ -38,8 +38,7 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True,
         # for COCODataset, we want to remove images without annotations
         # during training
         if data["factory"] == "COCODataset":
-            # args["remove_images_without_annotations"] = is_train
-            args["remove_images_without_annotations"] = True
+            args["remove_images_without_annotations"] = is_train
         if data["factory"] == "PascalVOCDataset":
             args["use_difficult"] = not is_train
         args["transforms"] = transforms
@@ -61,9 +60,9 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True,
     return [dataset]
 
 
-def make_data_sampler(dataset, shuffle, distributed):
+def make_data_sampler(dataset, shuffle, distributed, leaping_subsample):
     if distributed:
-        return samplers.DistributedSampler(dataset, shuffle=shuffle)
+        return samplers.DistributedSampler(dataset, shuffle=shuffle, leaping_subsample=leaping_subsample)
     if shuffle:
         sampler = torch.utils.data.sampler.RandomSampler(dataset)
     else:
@@ -109,7 +108,7 @@ def make_batch_data_sampler(
     return batch_sampler
 
 
-def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
+def make_data_loader(cfg, is_train=True, shuffle=True, is_distributed=False, start_iter=0):
     num_gpus = get_world_size()
     if is_train:
         images_per_batch = cfg.SOLVER.IMS_PER_BATCH
@@ -118,7 +117,6 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
         ), "SOLVER.IMS_PER_BATCH ({}) must be divisible by the number "
         "of GPUs ({}) used.".format(images_per_batch, num_gpus)
         images_per_gpu = images_per_batch // num_gpus
-        shuffle = True
         num_iters = cfg.SOLVER.MAX_ITER
     else:
         images_per_batch = cfg.TEST.IMS_PER_BATCH
@@ -162,10 +160,12 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
 
     data_loaders = []
     for dataset in datasets:
-        if cfg.ONEFLOW_PYTORCH_COMPARING.SEQUENTIAL_SAMPLE:
-            sampler = torch.utils.data.sampler.SequentialSampler(dataset)
-        else:
-            sampler = make_data_sampler(dataset, shuffle, is_distributed)
+        sampler = make_data_sampler(
+            dataset,
+            shuffle,
+            is_distributed,
+            cfg.ONEFLOW_PYTORCH_COMPARING.LEAPING_DATA_SAMPLE
+        )
         batch_sampler = make_batch_data_sampler(
             dataset, sampler, aspect_grouping, images_per_gpu, num_iters, start_iter
         )

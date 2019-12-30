@@ -87,14 +87,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         img, anno = super(COCODataset, self).__getitem__(idx)
         image_id = anno[0]["image_id"]
 
-        if idx < 1:
-            print("save image {}, size {} to png".format(image_id, img.size))
-            torchvision.utils.save_image(
-                torchvision.transforms.functional.to_tensor(img),
-                "{:012d}.png".format(image_id),
-            )
-            np.save("raw_img_{}".format(image_id), torchvision.transforms.functional.to_tensor(img))
-
         # filter crowd annotations
         # TODO might be better to add an extra field
         anno = [obj for obj in anno if obj["iscrowd"] == 0]

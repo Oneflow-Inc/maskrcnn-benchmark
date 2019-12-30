@@ -461,8 +461,12 @@ _C.ONEFLOW_PYTORCH_COMPARING.MAX_SAVE_TENSOR_ITERATION = 10
 _C.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH = ""
 # PyTorch use catituous catetory id by default, OneFlow don't
 _C.ONEFLOW_PYTORCH_COMPARING.USE_CONTIGUOUS_CATEGORY_ID = True
-# Load instance in sequential data
+# Deprecated: Load instance in sequential data
 _C.ONEFLOW_PYTORCH_COMPARING.SEQUENTIAL_SAMPLE = False
+# Shuffle data load when train
+_C.ONEFLOW_PYTORCH_COMPARING.SHUFFLE_DATA_LOAD_TRAIN = True
+# distribute sample like oneflow (leap num_replicas)
+_C.ONEFLOW_PYTORCH_COMPARING.LEAPING_DATA_SAMPLE = False
 # Probability of fliping images when training
 _C.ONEFLOW_PYTORCH_COMPARING.FLIP_PROB = 0.5
 # Num of iterations to print loss information

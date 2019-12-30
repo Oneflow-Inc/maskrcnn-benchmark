@@ -69,7 +69,7 @@ class GroupedBatchSampler(BatchSampler):
         # splits each cluster in batch_size, and merge as a list of tensors
         splits = [c.split(self.batch_size) for c in permuted_clusters]
         merged = tuple(itertools.chain.from_iterable(splits))
-
+        merged = tuple(filter(lambda x: x.numel() > 0, merged))
         # now each batch internally has the right order, but
         # they are grouped by clusters. Find the permutation between
         # different batches that brings them as close as possible to

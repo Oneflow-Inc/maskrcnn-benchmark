@@ -22,7 +22,7 @@ class DistributedSampler(Sampler):
         rank (optional): Rank of the current process within num_replicas.
     """
 
-    def __init__(self, dataset, num_replicas=None, rank=None, shuffle=True):
+    def __init__(self, dataset, num_replicas=None, rank=None, shuffle=True, leaping_subsample=False):
         if num_replicas is None:
             if not dist.is_available():
                 raise RuntimeError("Requires distributed package to be available")
@@ -38,6 +38,7 @@ class DistributedSampler(Sampler):
         self.num_samples = int(math.ceil(len(self.dataset) * 1.0 / self.num_replicas))
         self.total_size = self.num_samples * self.num_replicas
         self.shuffle = shuffle
+        self.leaping_subsample = leaping_subsample
 
     def __iter__(self):
         if self.shuffle:
@@ -53,8 +54,12 @@ class DistributedSampler(Sampler):
         assert len(indices) == self.total_size
 
         # subsample
-        offset = self.num_samples * self.rank
-        indices = indices[offset : offset + self.num_samples]
+        if self.leaping_subsample:
+            offset = self.rank
+            indices = indices[offset::self.num_replicas]
+        else:
+            offset = self.num_samples * self.rank
+            indices = indices[offset : offset + self.num_samples]
         assert len(indices) == self.num_samples
 
         return iter(indices)
