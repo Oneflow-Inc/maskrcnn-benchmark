@@ -51,20 +51,28 @@ def load_torch_npy(dic, key):
     else:
         # print(key, "not found")
         None
+def get_corespondent_flow_path(flow_all_iters_path, torch_path):
+    latest = glob.glob(os.path.join(flow_all_iters_path, "model_save-*"))
+    if latest == 0:
+        latest = glob.glob(flow_all_iters_path)
+    if len(latest) > 0:
+        latest.sort(key=os.path.getmtime)
+        iter_num = int(os.path.splitext(os.path.basename(torch_path))[0][-5:])
+        joined = os.path.join(latest[-1], "iter-{}".format(iter_num))
+        if os.path.isdir(joined):
+            return joined
+    return flow_all_iters_path
 
-latest = glob.glob(os.path.join(args.flow, "model_save-*"))
-if len(latest) > 0:
-    latest.sort(key=os.path.getmtime)
-    iter_num = int(os.path.splitext(os.path.basename(args.py))[0][-5:])
-    args.flow = os.path.join(latest[-1], "iter-{}".format(iter_num))
-    print(args.flow)
+def compare_model(flow_path, py_model_dict, map_json_path):
+    with open(map_json_path) as json_file:
+        model_map = json.load(json_file)
+        for mapper in model_map:
+            flow_npy = load_flow_npy(flow_path, mapper["flow"])
+            torch_npy = load_torch_npy(py_model_dict, mapper["torch"])
+            if flow_npy is not None and torch_npy is not None and mapper["torch"].endswith("bias") == False and mapper["flow"].endswith("scale/out") == False:
+                print("\n")
+                compare.main(flow_npy.reshape(torch_npy.shape), torch_npy, bn=mapper["flow"], absolute=1, verbose=True, level="error")
+    print(flow_path)
 
-model_dict = get_pytorch_model_dict (args.py)
-with open(args.map) as json_file:
-    model_map = json.load(json_file)
-    for mapper in model_map:
-        flow_npy = load_flow_npy(args.flow, mapper["flow"])
-        torch_npy = load_torch_npy(model_dict, mapper["torch"])
-        if flow_npy is not None and torch_npy is not None and mapper["torch"].endswith("bias") == False and mapper["flow"].endswith("scale/out") == False:
-            print("\n")
-            compare.main(flow_npy.reshape(torch_npy.shape), torch_npy, bn=mapper["flow"], absolute=0.2, verbose=True, level="error")
+if __name__ == "__main__":
+    compare_model(get_corespondent_flow_path(args.flow, args.py), get_pytorch_model_dict(args.py), args.map)
