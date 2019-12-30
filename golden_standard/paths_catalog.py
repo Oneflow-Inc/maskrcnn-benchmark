@@ -15,6 +15,10 @@ class DatasetCatalog(object):
             "img_dir": "mscoco_2017/val2017",
             "ann_file": "mscoco_2017/annotations/instances_val2017.json"
         },
+        "coco_instances_val2017_subsample_8_repeated": {
+            "img_dir": "mscoco_2017/val2017",
+            "ann_file": "mscoco_2017/annotations/instances_val2017_subsample_8_repeated.json"
+        },
         "coco_2014_train": {
             "img_dir": "coco/train2014",
             "ann_file": "coco/annotations/instances_train2014.json"
