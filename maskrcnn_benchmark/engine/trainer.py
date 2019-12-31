@@ -12,6 +12,7 @@ from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 from apex import amp
 
 import pandas as pd
+import pickle as pkl
 
 def reduce_loss_dict(loss_dict):
     """
@@ -177,6 +178,29 @@ def do_train(
 
         if iteration % checkpoint_period == 0:
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
+
+            if cfg.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER:
+                print("saving momentum")
+                state_dict = optimizer.state_dict()
+                model_name2momentum_buffer = {}
+                for key, value in model.named_parameters():
+                    if value.requires_grad:
+                        momentum_buffer = (
+                            state_dict["state"][id(value)]["momentum_buffer"]
+                            .cpu()
+                            .detach()
+                            .numpy()
+                        )
+                        model_name2momentum_buffer[key] = momentum_buffer
+
+                pkl.dump(
+                    model_name2momentum_buffer,
+                    open(
+                        "model_name2momentum_buffer-iter-{}.pkl".format(iteration), "wb"
+                    ),
+                    protocol=2,
+                )
+
         if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
 
