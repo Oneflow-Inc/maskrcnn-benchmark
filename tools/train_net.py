@@ -60,7 +60,8 @@ def train(cfg, local_rank, distributed):
 
     save_to_disk = get_rank() == 0
     checkpointer = DetectronCheckpointer(
-        cfg, model, optimizer, scheduler, output_dir, save_to_disk
+        cfg, model, optimizer, scheduler, output_dir, save_to_disk, 
+        cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_MODEL_NAME_2_OPTIMIZER_STATE
     )
     extra_checkpoint_data = checkpointer.load(cfg.MODEL.WEIGHT)
     arguments.update(extra_checkpoint_data)
