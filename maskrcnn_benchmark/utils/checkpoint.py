@@ -18,6 +18,7 @@ class Checkpointer(object):
         scheduler=None,
         save_dir="",
         save_to_disk=None,
+        save_model_name2state=False,
         logger=None,
     ):
         self.model = model
@@ -25,6 +26,7 @@ class Checkpointer(object):
         self.scheduler = scheduler
         self.save_dir = save_dir
         self.save_to_disk = save_to_disk
+        self.save_model_name2state = save_model_name2state
         if logger is None:
             logger = logging.getLogger(__name__)
         self.logger = logger
@@ -40,6 +42,10 @@ class Checkpointer(object):
         data["model"] = self.model.state_dict()
         if self.optimizer is not None:
             data["optimizer"] = self.optimizer.state_dict()
+            if self.save_model_name2state:
+                data["optimizer"]["model_name2state"] = {
+                    k: id(v) for k, v in self.model.named_parameters()
+                }
         if self.scheduler is not None:
             data["scheduler"] = self.scheduler.state_dict()
         data.update(kwargs)
@@ -107,10 +113,11 @@ class DetectronCheckpointer(Checkpointer):
         scheduler=None,
         save_dir="",
         save_to_disk=None,
+        save_model_name2state=False,
         logger=None,
     ):
         super(DetectronCheckpointer, self).__init__(
-            model, optimizer, scheduler, save_dir, save_to_disk, logger
+            model, optimizer, scheduler, save_dir, save_to_disk, save_model_name2state, logger
         )
         self.cfg = cfg.clone()
 
