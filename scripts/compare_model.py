@@ -72,17 +72,22 @@ def get_corespondent_flow_path(flow_all_iters_path, torch_path):
     else:
         return flow_all_iters_path
 
+def relative_diff(arr, abs_diff):
+    return np.max(abs_diff / (np.abs(arr) + 1e-10))
+
 def compare_npy(arr1, arr2, bn=None):
     diff = arr1 - arr2
     abs_diff = np.abs(diff)
+    relative_max = max([relative_diff(arr1, abs_diff), relative_diff(arr2, abs_diff)])
     return pd.DataFrame(
         {
             "bn": bn,
             "shape": str(arr2.shape),
             "equal": np.array_equal(arr1, arr2),
-            "abs_diff_max": np.max(abs_diff),
             "diff_max": np.max(diff),
             "diff_min": np.min(diff),
+            "abs_diff_max": np.max(abs_diff),
+            "relative_max": relative_max,
         },
         index=[0]
     )
@@ -104,7 +109,7 @@ def compare_model(flow_path, py_model_dict, map_json_path, momentum_pkl=None):
             
             if flow_npy is not None and torch_npy is not None:# and mapper["torch"].endswith("bias") == False and mapper["flow"].endswith("scale/out") == False:
                 # print("\n")
-                cmp = compare_npy(flow_npy.reshape(torch_npy.shape), torch_npy, bn=mapper["flow"])
+                cmp = compare_npy(flow_npy.reshape(torch_npy.shape), torch_npy, bn=mapper["flow"][:-len("/out")])
                 cmp_df = pd.concat([cmp_df, cmp], axis=0, sort=False)
                     
                 done_compare_flow.append(mapper["flow"])
@@ -112,11 +117,11 @@ def compare_model(flow_path, py_model_dict, map_json_path, momentum_pkl=None):
                 if momentum_pkl is not None:
                     if flow_momentum_npy is not None:
                         flow_torch_npy = momentum_pkl[mapper["torch"]]
-                        cmp = compare_npy(flow_momentum_npy.reshape(flow_torch_npy.shape), flow_torch_npy, bn=flow_momentum_key)
+                        cmp = compare_npy(flow_momentum_npy.reshape(flow_torch_npy.shape), flow_torch_npy, bn=flow_momentum_key[:-len("/out")])
                         cmp_df = pd.concat([cmp_df, cmp], axis=0, sort=False)
                         done_compare_flow.append(flow_momentum_key)
         cmp_df = cmp_df.drop(["equal", "shape"], axis=1)
-        cmp_df = cmp_df[cmp_df["abs_diff_max"] > 0.2]
+        cmp_df = cmp_df[cmp_df["abs_diff_max"] > 0.01]
         print(cmp_df.to_string(index=False))
         for k in py_model_dict.keys():
             if k not in done_compare_torch and k[len("module."):] not in done_compare_torch:
