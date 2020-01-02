@@ -89,6 +89,7 @@ def do_train(
         iteration = iteration + 1
         arguments["iteration"] = iteration
 
+        # print("iter:{}, image_id:{}, rank:{}".format(iteration, image_id, dist.get_rank()))
         get_tensor_saver().step()
 
         scheduler.step()
@@ -235,27 +236,6 @@ def do_train(
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
         if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
-
-            if cfg.ONEFLOW_PYTORCH_COMPARING.DUMP_MOMENTUM_BUFFER:
-                state_dict = optimizer.state_dict()
-                model_name2momentum_buffer = {}
-                for key, value in model.named_parameters():
-                    if value.requires_grad:
-                        momentum_buffer = (
-                            state_dict["state"][id(value)]["momentum_buffer"]
-                            .cpu()
-                            .detach()
-                            .numpy()
-                        )
-                        model_name2momentum_buffer[key] = momentum_buffer
-
-                pkl.dump(
-                    model_name2momentum_buffer,
-                    open(
-                        "model_final" + ".model_name2momentum_buffer.pkl", "wb"
-                    ),
-                    protocol=2,
-                )
 
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))
