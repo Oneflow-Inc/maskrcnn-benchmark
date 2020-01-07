@@ -105,6 +105,14 @@ class RPNLossComputation(object):
                 matched_targets.bbox, anchors_per_image.bbox
             )
 
+            get_tensor_saver().save(
+                tensor=regression_targets_per_image,
+                tensor_name="CHECK_POINT_regression_targets",
+                scope="rpn",
+                im_idx=img_idx,
+                save_grad=False
+            )
+
             labels.append(labels_per_image)
             regression_targets.append(regression_targets_per_image)
 
@@ -186,6 +194,7 @@ class RPNLossComputation(object):
         regression_targets = torch.cat(regression_targets, dim=0)
 
         bbox_pred = box_regression[sampled_pos_inds]
+        bbox_target = regression_targets[sampled_pos_inds]
         get_tensor_saver().save(
             tensor=bbox_pred,
             tensor_name="CHECK_POINT_bbox_pred",
@@ -194,7 +203,7 @@ class RPNLossComputation(object):
         )
 
         get_tensor_saver().save(
-            tensor=regression_targets[sampled_pos_inds],
+            tensor=bbox_target,
             tensor_name="CHECK_POINT_bbox_target",
             scope="rpn",
             save_grad=False
@@ -202,10 +211,31 @@ class RPNLossComputation(object):
 
         box_loss = smooth_l1_loss(
             bbox_pred,
-            regression_targets[sampled_pos_inds],
+            bbox_target,
             beta=1.0 / 9,
             size_average=False,
-        ) / (sampled_inds.numel())
+            raw_loss=True,
+        )
+        get_tensor_saver().save(
+            tensor=box_loss,
+            tensor_name="CHECK_POINT_rpn_box_reg_loss",
+            scope="rpn",
+            save_grad=True
+        )
+        box_loss = box_loss.sum()
+        get_tensor_saver().save(
+            tensor=box_loss,
+            tensor_name="CHECK_POINT_rpn_box_reg_loss_sum",
+            scope="rpn",
+            save_grad=True
+        )
+        box_loss /= sampled_inds.numel()
+        get_tensor_saver().save(
+            tensor=box_loss,
+            tensor_name="CHECK_POINT_rpn_box_reg_loss_mean",
+            scope="rpn",
+            save_grad=True
+        )
 
         get_tensor_saver().save(
             tensor=labels[sampled_inds],

@@ -55,7 +55,7 @@ class Checkpointer(object):
         torch.save(data, save_file)
         self.tag_last_checkpoint(save_file)
 
-    def load(self, f=None):
+    def load(self, f=None, appointed_weigt_decay=None, appointed_momentum=None):
         if self.has_checkpoint():
             # override argument with existing checkpoint
             f = self.get_checkpoint_file()
@@ -68,7 +68,14 @@ class Checkpointer(object):
         self._load_model(checkpoint)
         if "optimizer" in checkpoint and self.optimizer:
             self.logger.info("Loading optimizer from {}".format(f))
-            self.optimizer.load_state_dict(checkpoint.pop("optimizer"))
+            optm = checkpoint.pop("optimizer")
+            optm_param_groups = optm["param_groups"]
+            for group in optm_param_groups:
+                if appointed_momentum is not None and "momentum" in group:
+                    group["momentum"] = appointed_momentum
+                if appointed_weigt_decay is not None and "weight_decay" in group:
+                    group["weight_decay"] = appointed_weigt_decay
+            self.optimizer.load_state_dict(optm)
         if "scheduler" in checkpoint and self.scheduler:
             self.logger.info("Loading scheduler from {}".format(f))
             self.scheduler.load_state_dict(checkpoint.pop("scheduler"))

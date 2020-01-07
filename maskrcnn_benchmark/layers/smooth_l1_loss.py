@@ -3,7 +3,7 @@ import torch
 
 
 # TODO maybe push this to nn?
-def smooth_l1_loss(input, target, beta=1. / 9, size_average=True):
+def smooth_l1_loss(input, target, beta=1. / 9, size_average=True, raw_loss=False):
     """
     very similar to the smooth_l1_loss from pytorch, but with
     the extra beta parameter
@@ -13,4 +13,6 @@ def smooth_l1_loss(input, target, beta=1. / 9, size_average=True):
     loss = torch.where(cond, 0.5 * n ** 2 / beta, n - 0.5 * beta)
     if size_average:
         return loss.mean()
+    if raw_loss:
+        return loss
     return loss.sum()

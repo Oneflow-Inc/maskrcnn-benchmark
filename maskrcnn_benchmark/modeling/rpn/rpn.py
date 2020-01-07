@@ -1,6 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
 import torch.nn.functional as F
+import os
+import numpy
 from torch import nn
 
 from maskrcnn_benchmark.modeling import registry
@@ -92,6 +94,16 @@ class RPNHead(nn.Module):
         self.bbox_pred = nn.Conv2d(
             in_channels, num_anchors * 4, kernel_size=1, stride=1
         )
+        save_dir = os.path.join("train_dump", "iter_90000", "params_grad")
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        def save_weight_grad(grad):
+            print("weight grad sum:", grad.sum())
+            numpy.save(
+                os.path.join(save_dir, "rpn_bbox_pred.weight.grad"), grad.cpu().numpy()
+            )
+        self.bbox_pred.weight.register_hook(save_weight_grad)
 
         for l in [self.conv, self.cls_logits, self.bbox_pred]:
             torch.nn.init.normal_(l.weight, std=0.01)
@@ -100,16 +112,33 @@ class RPNHead(nn.Module):
     def forward(self, x):
         logits = []
         bbox_reg = []
-        for layer_idx, feature in enumerate(x, 1):
+        for layer_idx, feature in enumerate(x, 0):
             t = F.relu(self.conv(feature))
             get_tensor_saver().save(
                 tensor=t,
-                tensor_name="CHECK_POINT_rpn-head_conv_layer_{}".format(layer_idx),
+                tensor_name="CHECK_POINT_rpn-head_conv",
                 scope="rpn/head",
-                save_grad=True
+                save_grad=True,
+                level=layer_idx,
             )
-            logits.append(self.cls_logits(t))
-            bbox_reg.append(self.bbox_pred(t))
+            cls_l = self.cls_logits(t)
+            reg = self.bbox_pred(t)
+            get_tensor_saver().save(
+                tensor=cls_l,
+                tensor_name="CHECK_POINT_rpn-head_cls_logits",
+                scope="rpn/head",
+                save_grad=True,
+                level=layer_idx,
+            )
+            get_tensor_saver().save(
+                tensor=reg,
+                tensor_name="CHECK_POINT_rpn-head_bbox_pred",
+                scope="rpn/head",
+                save_grad=True,
+                level=layer_idx,
+            )
+            logits.append(cls_l)
+            bbox_reg.append(reg)
         return logits, bbox_reg
 
 
