@@ -61,7 +61,7 @@ class TensorSaver(object):
             save_dir = os.path.join(save_dir, scope)
 
         if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+            os.makedirs(save_dir, exist_ok=True)
 
         suffix = ""
         if isinstance(im_idx, int):
@@ -175,7 +175,7 @@ class MockDataMaker:
             return
         dump_dir = os.path.join("train_dump", "iter_{}".format(self.iter_))
         if not os.path.exists(dump_dir):
-            os.makedirs(dump_dir)
+            os.makedirs(dump_dir, exist_ok=True)
 
         with open(os.path.join(dump_dir, "mock_data.pkl"), "wb") as f:
             pk.dump(self.data_, f, protocol=2)

@@ -72,46 +72,41 @@ def do_train(
         training=True,
         base_dir="train_dump",
         iteration=start_iter,
-        max_iter=start_iter
-        + cfg.ONEFLOW_PYTORCH_COMPARING.MAX_SAVE_TENSOR_ITERATION,
+        max_iter=start_iter + cfg.ONEFLOW_PYTORCH_COMPARING.MAX_SAVE_TENSOR_ITERATION,
         save_shape=cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_TENSOR_INCLUDE_SHAPE_IN_NAME,
         enable_save=cfg.ONEFLOW_PYTORCH_COMPARING.ENABLE_TENSOR_SAVER,
     )
     create_mock_data_maker(start_iter, enable=False)
 
-    metrics = pd.DataFrame(
-        {"iter": 0, "legend": "cfg", "note": str(cfg)}, index=[0]
-    )
-    for iteration, (images, targets, image_id) in enumerate(
-        data_loader, start_iter
-    ):
+    metrics = pd.DataFrame({"iter": 0, "legend": "cfg", "note": str(cfg)}, index=[0])
+    for iteration, (images, targets, image_id) in enumerate(data_loader, start_iter):
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
 
-        # print("iter:{}, image_id:{}, rank:{}".format(iteration, image_id, dist.get_rank()))
+        # if get_world_size() > 1:
+        #     print("iter:{}, image_id:{}, rank:{}".format(iteration, image_id, dist.get_rank()))
         get_tensor_saver().step()
 
         scheduler.step()
 
         if cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH != "":
             fake_image_path = os.path.join(
-                cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH,
-                "image_{}.npy".format(iteration),
+                cfg.ONEFLOW_PYTORCH_COMPARING.FAKE_IMAGE_DATA_PATH, "image_{}.npy".format(iteration)
             )
             fake_images = np.load(fake_image_path)
             fake_images = np.transpose(fake_images, (0, 3, 1, 2))
             images.tensors = torch.tensor(fake_images)
             logger.info(
-                "Load fake image data from {} at itor {}".format(
-                    fake_image_path, iteration
-                )
+                "Load fake image data from {} at itor {}".format(fake_image_path, iteration)
             )
         elif cfg.ONEFLOW_PYTORCH_COMPARING.SAVE_IMAGE_TENSOR is True:
             with enable_tensor_saver() as saver:
                 saver.save(
                     tensor=images.tensors.permute(0, 2, 3, 1),
-                    tensor_name="image",
+                    tensor_name="image_{}".format(dist.get_rank())
+                    if get_world_size() > 1
+                    else "image",
                 )
 
         get_mock_data_maker().step()
@@ -176,17 +171,11 @@ def do_train(
                     "legend": "loss_mask",
                     "value": meters.meters["loss_mask"].median,
                 },
-                {
-                    "iter": iteration,
-                    "legend": "lr",
-                    "value": optimizer.param_groups[0]["lr"],
-                },
+                {"iter": iteration, "legend": "lr", "value": optimizer.param_groups[0]["lr"]},
                 {
                     "iter": iteration,
                     "legend": "max_mem",
-                    "value": torch.cuda.max_memory_allocated()
-                    / 1024.0
-                    / 1024.0,
+                    "value": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                 },
                 {"iter": iteration, "legend": "loader_time", "value": data_time},
                 {
@@ -197,10 +186,7 @@ def do_train(
             ]
         )
         metrics = pd.concat([metrics, df], axis=0, sort=False)
-        if (
-            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0
-            or iteration == max_iter
-        ):
+        if iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_PERIODS == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join(
                     [
@@ -219,8 +205,7 @@ def do_train(
                 )
             )
         if (
-            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS
-            == 0
+            iteration % cfg.ONEFLOW_PYTORCH_COMPARING.METRICS_SAVE_CSV_PERIODS == 0
             or iteration == max_iter
         ):
             if get_world_size() < 2 or dist.get_rank() == 0:
