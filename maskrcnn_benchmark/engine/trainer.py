@@ -71,6 +71,7 @@ def do_train(
         base_dir="train_dump",
         iteration=start_iter,
         max_iter=start_iter + 10,
+        offline=True,
     )
     create_mock_data_maker(start_iter)
 

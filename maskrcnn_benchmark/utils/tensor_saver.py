@@ -61,12 +61,30 @@ class TensorSaver(object):
             )
 
 
+class OfflineTensorSaver(TensorSaver):
+    def save(
+        self,
+        tensor,
+        tensor_name,
+        scope=None,
+        save_grad=False,
+        level=None,
+        im_idx=None,
+    ):
+        pass
+
+
 tensor_saver = None
 
 
-def create_tensor_saver(training, base_dir, iteration=0, max_iter=None):
+def create_tensor_saver(
+    training, base_dir, iteration=0, max_iter=None, offline=False
+):
     global tensor_saver
-    tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
+    if offline:
+        tensor_saver = OfflineTensorSaver(training, base_dir, iteration, max_iter)
+    else:
+        tensor_saver = TensorSaver(training, base_dir, iteration, max_iter)
 
 
 def get_tensor_saver():

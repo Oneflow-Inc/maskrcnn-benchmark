@@ -49,11 +49,12 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         super(COCODataset, self).__init__(root, ann_file)
 
         # remove imgs with category_id > 80
-        # to_remove = set([])
-        # for cat_id, _ in self.coco.cats.items():
-        #     if cat_id > 80:
-        #         to_remove |= set(self.coco.catToImgs[cat_id])
-        # self.ids = list(set(self.ids) - to_remove)
+        if not use_contiguous_category_id:
+            to_remove = set([])
+            for cat_id, _ in self.coco.cats.items():
+                if cat_id > 80:
+                    to_remove |= set(self.coco.catToImgs[cat_id])
+            self.ids = list(set(self.ids) - to_remove)
 
         # sort indices for reproducible results
         self.ids = sorted(self.ids)
@@ -68,11 +69,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
                     ids.append(img_id)
             self.ids = ids
 
-        print("z" * 1000)
-        print(len(self.ids))
-        print(type(self.ids))
-        print(self.ids)
-
         self.json_category_id_to_contiguous_id = {
             v: i + 1 for i, v in enumerate(self.coco.getCatIds())
         }
@@ -82,7 +78,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self._transforms = transforms
         self.use_contiguous_category_id = use_contiguous_category_id
-        print("coco dataset first 20 image_ids: ", self.ids[0:20])
 
     def __getitem__(self, idx):
         img, anno = super(COCODataset, self).__getitem__(idx)
@@ -126,12 +121,6 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         if self._transforms is not None:
             img, target = self._transforms(img, target)
 
-        print(
-            "coco __getitem__ idx: {}, image_id: {}, anno_len: {}".format(
-                idx, image_id, len(anno)
-            )
-        )
-        # print("coco __getitem__ anno example: ", anno[0])
         return img, target, image_id
 
     def get_img_info(self, index):
